@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <upstream>
+    <remote-id type="github">OpenKinect/libfreenect</remote-id>
+    <doc>https://github.com/OpenKinect/libfreenect/blob/master/README.md</doc>
+    <changelog>https://github.com/OpenKinect/libfreenect/commits/master</changelog>
+  </upstream>
+	<use>
+	  <flag name="c_sync">Install the synchronous C wrapper</flag>
+		<flag name="cpp">Install the C++ wrapper</flag>
+    <flag name="fakenect">Install the fakenect extension to record and playback sessions</flag>
+	  <flag name="opencv">Install examples and wrappers for OpenCV</flag>
+		<flag name="openni2">Install the bridge library for OpenNI2</flag>
+	</use>
+</pkgmetadata>
