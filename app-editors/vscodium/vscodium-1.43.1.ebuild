@@ -102,10 +102,9 @@ src_prepare() {
   # create a fake git directory to stop husky searching up the fs tree and trying to write outside the sandbox
   mkdir "${WORKDIR}/.git"
 
-  # remove all build calls so we can make our own instead
-  # todo: make a PR to extract patching from build.sh to prepare.sh
-  sed -i "s|. ../create_appimage.sh|:|" ./build.sh || die
-  sed -i "s|yarn gulp.*|:|" ./build.sh || die
+  export TRAVIS_OS_NAME="linux"
+  export BUILDARCH
+  ./prepare_vscode.sh
 
   if use system-ffmpeg; then
     # prevent downloading an extra version of libffmpeg.so during the build
@@ -118,13 +117,6 @@ src_prepare() {
 }
 
 src_compile () {
-  export TRAVIS_OS_NAME="linux"
-  export SHOULD_BUILD="yes"
-  export BUILDARCH
-  ./build.sh
-
-  # todo: disable upgrade URL since versions will be managed by portage
-
   cd "${S_VSCODE}"
     export NODE_ENV="production" # todo: necessary?
 	  # the minify step is very expensive in RAM and CPU time, so make it optional
