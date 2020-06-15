@@ -10,7 +10,7 @@ HOMEPAGE="https://vscodium.com/"
 LICENSE="MIT"
 
 BUILDARCH="x64"
-ELECTRON_VERSION="7.2.4"
+ELECTRON_VERSION="7.3.1"
 ELECTRON_ZIP="electron-v${ELECTRON_VERSION}-linux-${BUILDARCH}.zip"
 ELECTRON_FFMPEG_ZIP="ffmpeg-v${ELECTRON_VERSION}-linux-${BUILDARCH}.zip"
 
@@ -30,7 +30,7 @@ COMMON_DEPEND=""
 BDEPEND="
   app-misc/jq
   app-shells/bash
-  net-libs/nodejs[npm]
+  =net-libs/nodejs-12*[npm]
   sys-apps/grep
   sys-apps/sed
   sys-apps/yarn
