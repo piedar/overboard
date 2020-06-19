@@ -37,7 +37,7 @@ BDEPEND="
   sys-devel/patch
 "
 DEPEND="${COMMON_DEPEND}
-  >=app-crypt/libsecret-0.18.5:0[crypt]
+  app-crypt/libsecret[crypt]
 "
 RDEPEND="${COMMON_DEPEND}
   system-ffmpeg? ( media-video/ffmpeg[chromium] )
@@ -72,7 +72,6 @@ RDEPEND="${COMMON_DEPEND}
 
 # todo: are any of these necessary?
 OLD_EXTRA_RDEPEND="
-  >=app-crypt/libsecret-0.18.5:0[crypt]
   >=dev-libs/libdbusmenu-16.04.0
   >=media-libs/libpng-1.2.46:0
   >=x11-libs/libnotify-0.7.7:0
