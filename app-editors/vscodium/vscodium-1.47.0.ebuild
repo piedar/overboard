@@ -10,7 +10,7 @@ HOMEPAGE="https://vscodium.com/"
 LICENSE="MIT"
 
 BUILDARCH="x64"
-ELECTRON_VERSION="7.3.1"
+ELECTRON_VERSION="7.3.2"
 ELECTRON_ZIP="electron-v${ELECTRON_VERSION}-linux-${BUILDARCH}.zip"
 ELECTRON_FFMPEG_ZIP="ffmpeg-v${ELECTRON_VERSION}-linux-${BUILDARCH}.zip"
 
@@ -30,6 +30,7 @@ COMMON_DEPEND=""
 BDEPEND="
   app-misc/jq
   app-shells/bash
+  dev-vcs/git
   =net-libs/nodejs-12*[npm]
   sys-apps/grep
   sys-apps/sed
@@ -98,8 +99,8 @@ src_prepare() {
   export npm_config_scripts_prepend_node_path="auto"
   yarn global add node-gyp
 
-  # create a fake git directory to stop husky searching up the fs tree and trying to write outside the sandbox
-  mkdir "${WORKDIR}/.git"
+  # init a git repo to stop husky searching up the fs tree and trying to write outside the sandbox
+  git init "${WORKDIR}"
 
   export TRAVIS_OS_NAME="linux"
   export BUILDARCH
