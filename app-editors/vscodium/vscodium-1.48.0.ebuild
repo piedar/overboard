@@ -132,8 +132,11 @@ QA_PREBUILT="${RELTARGET}}/codium"
 
 src_install() {
   dodir "/opt"
+  OUTDIR="${S}/VSCode-linux-${BUILDARCH}"
+  # fixup world-writable files
+  chmod go-w --recursive "${OUTDIR}/resources/app/extensions"
   # using doins -r would strip executable bits from all binaries
-  cp -pPR --no-target-directory "${S}/VSCode-linux-${BUILDARCH}" "${ED}/${RELTARGET}" || die "file copy failed"
+  cp -pPR --no-target-directory "${OUTDIR}" "${ED}/${RELTARGET}" || die "file copy failed"
   if use system-ffmpeg; then
     dosym "${EPREFIX}/usr/lib64/chromium/libffmpeg.so" "/${RELTARGET}/libffmpeg.so" || die "ffmpeg.so symlink failed"
   fi
