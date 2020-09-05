@@ -97,14 +97,14 @@ src_unpack() {
 
 src_prepare() {
   export npm_config_scripts_prepend_node_path="auto"
-  yarn global add node-gyp
+  yarn global add node-gyp || die "add node-gyp failed"
 
   # init a git repo to stop husky searching up the fs tree and trying to write outside the sandbox
   git init "${WORKDIR}"
 
   export TRAVIS_OS_NAME="linux"
   export BUILDARCH
-  ./prepare_vscode.sh
+  ./prepare_vscode.sh || die "prepare_vscode failed"
 
   if use system-ffmpeg; then
     # prevent downloading an extra version of libffmpeg.so during the build
