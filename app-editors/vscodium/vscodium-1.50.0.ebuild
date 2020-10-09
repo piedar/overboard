@@ -9,10 +9,10 @@ DESCRIPTION="VS Code without MS branding/telemetry/licensing"
 HOMEPAGE="https://vscodium.com/"
 LICENSE="MIT"
 
-BUILDARCH="x64"
+VSCODE_ARCH="x64"
 ELECTRON_VERSION="9.2.1"
-ELECTRON_ZIP="electron-v${ELECTRON_VERSION}-linux-${BUILDARCH}.zip"
-ELECTRON_FFMPEG_ZIP="ffmpeg-v${ELECTRON_VERSION}-linux-${BUILDARCH}.zip"
+ELECTRON_ZIP="electron-v${ELECTRON_VERSION}-linux-${VSCODE_ARCH}.zip"
+ELECTRON_FFMPEG_ZIP="ffmpeg-v${ELECTRON_VERSION}-linux-${VSCODE_ARCH}.zip"
 
 SRC_URI="
   https://github.com/VSCodium/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz
@@ -102,8 +102,9 @@ src_prepare() {
   # init a git repo to stop husky searching up the fs tree and trying to write outside the sandbox
   git init "${WORKDIR}"
 
-  export TRAVIS_OS_NAME="linux"
-  export BUILDARCH
+  export OS_NAME="linux"
+  export VSCODE_ARCH
+  export BUILDARCH="${VSCODE_ARCH}" # todo: BUILDARCH seems to matter only when CI_WINDOWS=="True"
   ./prepare_vscode.sh || die "prepare_vscode failed"
 
   if use system-ffmpeg; then
@@ -120,7 +121,7 @@ src_compile () {
   cd "${S_VSCODE}"
     export NODE_ENV="production" # todo: necessary?
 	  # the minify step is very expensive in RAM and CPU time, so make it optional
-	  use minify && GULP_TARGET="vscode-linux-${BUILDARCH}-min" || GULP_TARGET="vscode-linux-${BUILDARCH}"
+	  use minify && GULP_TARGET="vscode-linux-${VSCODE_ARCH}-min" || GULP_TARGET="vscode-linux-${VSCODE_ARCH}"
     yarn gulp "${GULP_TARGET}" || die "gulp build failed"
   cd -
 }
@@ -132,7 +133,7 @@ QA_PREBUILT="${RELTARGET}}/codium"
 
 src_install() {
   dodir "/opt"
-  OUTDIR="${S}/VSCode-linux-${BUILDARCH}"
+  OUTDIR="${S}/VSCode-linux-${VSCODE_ARCH}"
   # fixup world-writable files
   chmod go-w --recursive "${OUTDIR}/resources/app/extensions"
   # using doins -r would strip executable bits from all binaries
