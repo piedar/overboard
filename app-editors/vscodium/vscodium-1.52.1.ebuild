@@ -10,7 +10,7 @@ HOMEPAGE="https://vscodium.com/"
 LICENSE="MIT"
 
 VSCODE_ARCH="x64"
-ELECTRON_VERSION="9.2.1"
+ELECTRON_VERSION="9.3.5"
 ELECTRON_ZIP="electron-v${ELECTRON_VERSION}-linux-${VSCODE_ARCH}.zip"
 ELECTRON_FFMPEG_ZIP="ffmpeg-v${ELECTRON_VERSION}-linux-${VSCODE_ARCH}.zip"
 
@@ -31,7 +31,7 @@ BDEPEND="
   app-misc/jq
   app-shells/bash
   dev-vcs/git
-  =net-libs/nodejs-12*[npm]
+  net-libs/nodejs:0/14[npm]
   sys-apps/grep
   sys-apps/sed
   sys-apps/yarn
@@ -119,7 +119,11 @@ src_prepare() {
 
 src_compile () {
   cd "${S_VSCODE}"
-    export NODE_ENV="production" # todo: necessary?
+    # todo: upstream build.sh calls these checks - not sure if necessary here
+    #yarn gulp hygiene
+    #yarn monaco-compile-check
+    #yarn valid-layers-check
+
 	  # the minify step is very expensive in RAM and CPU time, so make it optional
 	  use minify && GULP_TARGET="vscode-linux-${VSCODE_ARCH}-min" || GULP_TARGET="vscode-linux-${VSCODE_ARCH}"
     yarn gulp "${GULP_TARGET}" || die "gulp build failed"
