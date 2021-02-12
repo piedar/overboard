@@ -1,11 +1,11 @@
-# Copyright 1999-2020 Gentoo Foundation
+# Copyright 1999-2021 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
 inherit cmake-utils
 
-PYTHON_COMPAT=( python{2_7,3_7} )
+PYTHON_COMPAT=( python3_8 )
 inherit python-r1
 
 GH_REPO="https://github.com/OpenKinect/${PN}"
@@ -34,7 +34,7 @@ COMMON_DEP="
   $(python_gen_cond_dep 'dev-python/numpy[${PYTHON_USEDEP}]')
 "
 BDEPEND="
-  !bindist? ( dev-lang/python:2 )
+  !bindist? ( dev-lang/python:3 )
   doc? ( app-doc/doxygen )
   dev-util/cmake
   sys-apps/sed
@@ -59,10 +59,8 @@ src_configure() {
     -DBUILD_FAKENECT="$(usex fakenect)"
     -DBUILD_CV="$(usex opencv)"
     -DBUILD_OPENNI2_DRIVER="$(usex openni2)"
-    -DBUILD_PYTHON2="$(usex python_targets_python2_7)"
-    -DPython2_EXACTVERSION="$(use python_targets_python2_7 && python2.7 -c "import platform ; print(platform.python_version())")"
-    -DBUILD_PYTHON3="$(usex python_targets_python3_7)"
-    -DPython3_EXACTVERSION="$(use python_targets_python3_7 && python3.7 -c "import platform ; print(platform.python_version())")"
+    -DBUILD_PYTHON3="$(usex python_targets_python3_8)"
+    -DPython3_EXACTVERSION="$(use python_targets_python3_8 && python3.8 -c "import platform ; print(platform.python_version())")"
   )
   cmake-utils_src_configure
 }
