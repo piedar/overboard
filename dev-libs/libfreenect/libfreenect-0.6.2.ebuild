@@ -1,13 +1,12 @@
-# Copyright 1999-2020 Gentoo Foundation
+# Copyright 1999-2021 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
 inherit cmake-utils
 
-# todo: python detection is broken, need to fix upstream
-#PYTHON_COMPAT=( python{2_7,3_6} )
-#inherit python-r1
+PYTHON_COMPAT=( python3_8 )
+inherit python-r1
 
 GH_REPO="https://github.com/OpenKinect/${PN}"
 DESCRIPTION="Drivers and libraries for the Xbox Kinect device"
@@ -32,20 +31,18 @@ COMMON_DEP="
               virtual/opengl )
   opencv? ( media-libs/opencv )
   ${PYTHON_DEPS}
+  $(python_gen_cond_dep 'dev-python/numpy[${PYTHON_USEDEP}]')
 "
-# todo: python_targets_python2_7? ( dev-python/numpy )
-# todo: python_targets_python3_6? ( dev-python/numpy )
 BDEPEND="
-  !bindist? ( dev-lang/python:2 )
+  !bindist? ( dev-lang/python:3 )
   doc? ( app-doc/doxygen )
   dev-util/cmake
   sys-apps/sed
   virtual/pkgconfig
 "
 DEPEND="${COMMON_DEP}
+  $(python_gen_cond_dep 'dev-python/cython[${PYTHON_USEDEP}]')
 "
-# todo: python_targets_python2_7? ( dev-python/cython )
-# todo: python_targets_python3_6? ( dev-python/cython )
 RDEPEND="${COMMON_DEP}"
 
 src_prepare() {
@@ -62,8 +59,8 @@ src_configure() {
     -DBUILD_FAKENECT="$(usex fakenect)"
     -DBUILD_CV="$(usex opencv)"
     -DBUILD_OPENNI2_DRIVER="$(usex openni2)"
-    # todo: -DBUILD_PYTHON2="$(usex python_targets_python2_7)"
-    # todo: -DBUILD_PYTHON3="$(usex python_targets_python3_6)"
+    -DBUILD_PYTHON3="$(usex python_targets_python3_8)"
+    -DPython3_EXACTVERSION="$(use python_targets_python3_8 && python3.8 -c "import platform ; print(platform.python_version())")"
   )
   cmake-utils_src_configure
 }
