@@ -10,7 +10,8 @@ HOMEPAGE="https://vscodium.com/"
 LICENSE="MIT"
 
 VSCODE_ARCH="x64"
-ELECTRON_VERSION="11.2.1"
+ELECTRON_VERSION="11.3.0"
+ELECTRON_COMMIT="ad7d1b1b49693bf7121ef728679aa91bceed390f6a4afb9f94f1cff5be54639b"
 ELECTRON_ZIP="electron-v${ELECTRON_VERSION}-linux-${VSCODE_ARCH}.zip"
 ELECTRON_FFMPEG_ZIP="ffmpeg-v${ELECTRON_VERSION}-linux-${VSCODE_ARCH}.zip"
 
@@ -85,13 +86,14 @@ src_unpack() {
   unpack "vscode-${PV}.tar.gz"
   mv --no-target-directory "vscode-${PV}" "${S_VSCODE}" || die "vscode move failed"
 
-  mkdir -p "${HOME}/.cache/electron/"
-  mkdir -p "${T}/gulp-electron-cache/atom/electron/"
-  ln "${DISTDIR}/${ELECTRON_ZIP}" "${HOME}/.cache/electron/"
-  ln "${DISTDIR}/${ELECTRON_ZIP}" "${T}/gulp-electron-cache/atom/electron/"
+  local readonly electronDir="${HOME}/.cache/electron/httpsgithub.comelectronelectronreleasesdownloadv${ELECTRON_VERSION}electron-v${ELECTRON_VERSION}-linux-${VSCODE_ARCH}.zip/"
+  local readonly electronCommitDir="${HOME}/.cache/electron/${ELECTRON_COMMIT}/"
+  mkdir -p "${electronDir}"
+  mkdir -p "${electronCommitDir}"
+  ln "${DISTDIR}/${ELECTRON_ZIP}" "${electronDir}"
+  ln "${DISTDIR}/${ELECTRON_ZIP}" "${electronCommitDir}"
   if ! use system-ffmpeg ; then
-    ln "${DISTDIR}/${ELECTRON_FFMPEG_ZIP}" "${HOME}/.cache/electron/"
-    ln "${DISTDIR}/${ELECTRON_FFMPEG_ZIP}" "${T}/gulp-electron-cache/atom/electron/"
+    ln "${DISTDIR}/${ELECTRON_FFMPEG_ZIP}" "${electronCommitDir}"
   fi
 }
 
