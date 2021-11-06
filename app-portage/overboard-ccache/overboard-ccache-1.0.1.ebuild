@@ -16,7 +16,7 @@ RDEPEND="
 
 S="${WORKDIR}"
 
-src_install() {
+pkg_preinst() {
   dodir /etc/portage/package.env/overboard
   echo "*/* overboard/ccache" > "${ED}/etc/portage/package.env/overboard/ccache"
   chmod -w "${ED}/etc/portage/package.env/overboard/ccache"

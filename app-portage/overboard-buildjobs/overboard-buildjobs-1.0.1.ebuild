@@ -10,11 +10,8 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 ~x86"
 
-BDEPEND="
-  dev-lang/python
-"
-
 RDEPEND="
+  dev-lang/python
   sys-apps/util-linux
 "
 
@@ -32,7 +29,7 @@ print("PORTAGE_IONICE_COMMAND=\"ionice -c 3 -p \\\${PID}\"")
 EOF
 }
 
-src_install() {
+pkg_preinst() {
   dodir /etc/portage/package.env/overboard
   echo "*/* overboard/buildjobs" > "${ED}/etc/portage/package.env/overboard/buildjobs"
   chmod -w "${ED}/etc/portage/package.env/overboard/buildjobs"

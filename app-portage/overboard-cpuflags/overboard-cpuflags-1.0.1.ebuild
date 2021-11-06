@@ -10,14 +10,14 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 ~x86"
 
-BDEPEND="
+RDEPEND="
   app-portage/cpuid2cpuflags:=
   sys-apps/sed
 "
 
 S="${WORKDIR}"
 
-src_install() {
+pkg_preinst() {
   dodir /etc/portage/package.env/overboard
   echo "*/* overboard/cpuflags" > "${ED}/etc/portage/package.env/overboard/cpuflags"
   chmod -w "${ED}/etc/portage/package.env/overboard/cpuflags"
