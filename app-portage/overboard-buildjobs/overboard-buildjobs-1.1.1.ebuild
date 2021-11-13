@@ -21,7 +21,7 @@ generate_config() {
   python << EOF
 import math, os
 numcpu = max(1, len(os.sched_getaffinity(0)) if 'sched_getaffinity' in dir(os) else os.cpu_count())
-config = f"--jobs={math.ceil(1.5 * numcpu)} --load-average={math.ceil(2 * numcpu)}"
+config = f"--jobs={math.ceil(1.25 * numcpu)} --load-average={math.ceil(2 * numcpu)}"
 print(f"MAKEOPTS=\"{config}\"")
 print(f"EMERGE_DEFAULT_OPTS=\"{config} --keep-going\"")
 print("PORTAGE_NICENESS=\"18\"")
