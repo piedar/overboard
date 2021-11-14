@@ -1,0 +1,19 @@
+#!/bin/bash
+# SPDX-License-Identifier: LGPL-3.0-only
+
+set -e
+
+readonly PID=${1:?pid not specified}
+
+if command -v busctl >/dev/null; then
+  # https://unix.stackexchange.com/questions/525740/how-do-i-create-a-systemd-scope-for-an-already-existing-process-from-the-command
+  SCOPE="$(cat "/proc/${PID}/comm")-${PID}.scope"
+  SLICE="nicest.slice"
+  busctl --quiet --allow-interactive-authorization=false call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager \
+      StartTransientUnit 'ssa(sv)a(sa(sv))' "${SCOPE}" fail 2 PIDs au 1 ${PID} Slice s "${SLICE}" 0 &&
+    exit 0 || echo >&2 "renicest: failed to move ${PID} to ${SLICE} via busctl - falling back to traditional renice"
+fi
+
+renice +19 --pid ${PID}
+ionice --class idle --pid ${PID}
+chrt --all-tasks --batch --pid 0 ${PID} # argument order looks wrong but chrt is weird like that

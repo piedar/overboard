@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: LGPL-3.0-only
+
+[Unit]
+Description=Runs processes at lowest possible priority
+Documentation=man:systemd.slice(5)
+Before=slices.target
+
+[Slice]
+CPUWeight=1
+IOWeight=1

@@ -1,0 +1,7 @@
+#!/bin/bash
+# SPDX-License-Identifier: LGPL-3.0-only
+
+set -e
+
+renicest $$ # renicest this process
+exec "$@"   # replace this process with the user command
