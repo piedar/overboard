@@ -12,7 +12,7 @@ KEYWORDS="amd64 ~x86"
 
 RDEPEND="
   dev-lang/python
-  sys-apps/util-linux
+  sys-process/nicest
 "
 
 S="${WORKDIR}"
@@ -24,8 +24,7 @@ numcpu = max(1, len(os.sched_getaffinity(0)) if 'sched_getaffinity' in dir(os) e
 config = f"--jobs={math.ceil(1.25 * numcpu)} --load-average={math.ceil(2 * numcpu)}"
 print(f"MAKEOPTS=\"{config}\"")
 print(f"EMERGE_DEFAULT_OPTS=\"{config} --keep-going\"")
-print("PORTAGE_NICENESS=\"18\"")
-print("PORTAGE_IONICE_COMMAND=\"ionice -c 3 -p \\\${PID}\"")
+print("PORTAGE_IONICE_COMMAND=\"renicest \\\${PID}\"")
 EOF
 }
 
@@ -37,11 +36,4 @@ pkg_preinst() {
   dodir /etc/portage/env/overboard
   generate_config > "${ED}/etc/portage/env/overboard/buildjobs"
   chmod -w "${ED}/etc/portage/env/overboard/buildjobs"
-}
-
-pkg_postinst() {
-  if [ "$(cat /proc/sys/kernel/sched_autogroup_enabled 2>/dev/null)" = "1" ] ; then
-    ewarn "This system has autogroup enabled, so it may not respect NICE values or CPU scheduling classes."
-    ewarn "Try setting kernel.sched_autogroup_disabled = 1 in /etc/sysctl.conf or passing noautogroup when booting the kernel."
-  fi
 }
