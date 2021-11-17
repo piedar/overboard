@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
+polkit.addRule((action, subject) => {
+  if (action.id === "org.freedesktop.systemd1.manage-units") {
+    /*
+    polkit.log("action=" + action);
+    polkit.log("subject=" + subject);
+    polkit.log("unit=" + action.lookup("unit"));
+    polkit.log("verb=" + action.lookup("verb"));
+    polkit.log("polkit.message=" +action.lookup("polkit.message"));
+    polkit.log("polkit.gettext_domain" + action.lookup("polkit.gettext_domain"));
+    */
+
+    // systemd doesn't provide any info for transient units - https://github.com/systemd/systemd/issues/17224
+    // check for undefined to limit the scope as much as possible, and for the wheel group to keep it reasonably secure
+    if (action.lookup("unit") === undefined && action.lookup("verb") === undefined && subject.isInGroup("wheel")) {
+      return polkit.Result.YES;
+    }
+  }
+});

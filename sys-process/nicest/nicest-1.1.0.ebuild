@@ -26,6 +26,8 @@ src_install() {
   if use systemd; then
     insinto /lib/systemd/system/
     doins "${FILESDIR}/nicest.slice"
+    insinto /usr/share/polkit-1/rules.d/
+    doins "${FILESDIR}/99-nicest.rules"
   fi
 }
 
