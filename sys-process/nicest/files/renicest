@@ -5,7 +5,7 @@ set -e
 
 readonly PID=${1:?pid not specified}
 
-if command -v busctl >/dev/null; then
+if [ -d /run/systemd/system/ ]; then
   # https://unix.stackexchange.com/questions/525740/how-do-i-create-a-systemd-scope-for-an-already-existing-process-from-the-command
   SCOPE="$(cat "/proc/${PID}/comm")-${PID}.scope"
   SLICE="nicest.slice"

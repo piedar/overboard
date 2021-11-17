@@ -9,10 +9,8 @@ LICENSE="LGPL-3"
 
 SLOT="0"
 KEYWORDS="*"
-IUSE="systemd"
 
 RDEPEND="
-  systemd? ( sys-apps/systemd )
   sys-apps/coreutils
   sys-apps/util-linux
 "
@@ -23,12 +21,11 @@ src_install() {
   dobin "${FILESDIR}/nicest"
   dobin "${FILESDIR}/renicest"
 
-  if use systemd; then
-    insinto /lib/systemd/system/
-    doins "${FILESDIR}/nicest.slice"
-    insinto /usr/share/polkit-1/rules.d/
-    doins "${FILESDIR}/99-nicest.rules"
-  fi
+  # systemd support will be detected at runtime
+  insinto /lib/systemd/system/
+  doins "${FILESDIR}/nicest.slice"
+  insinto /usr/share/polkit-1/rules.d/
+  doins "${FILESDIR}/99-nicest.rules"
 }
 
 pkg_postinst() {
