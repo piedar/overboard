@@ -14,6 +14,6 @@ if [ -d /run/systemd/system/ ]; then
     exit 0 || echo >&2 "renicest: failed to move ${PID} to ${SLICE} via busctl - falling back to traditional renice"
 fi
 
-renice +19 --pid ${PID}
+renice +19 --pid ${PID} >/dev/null
 ionice --class idle --pid ${PID}
 chrt --all-tasks --batch --pid 0 ${PID} # argument order looks wrong but chrt is weird like that
