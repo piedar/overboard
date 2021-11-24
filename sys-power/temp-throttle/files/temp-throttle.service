@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
+[Unit]
+Description=Throttles system CPU frequency based on a desired maximum temperature
+
+[Service]
+Type=simple
+Environment="MAX_TEMP=85"
+ExecStart=/usr/bin/temp-throttle ${MAX_TEMP}
+
+ProtectHome=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectControlGroups=true
