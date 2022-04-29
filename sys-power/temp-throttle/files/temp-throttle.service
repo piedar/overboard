@@ -5,7 +5,7 @@ Description=Throttles system CPU frequency based on a desired maximum temperatur
 
 [Service]
 Type=simple
-Environment="MAX_TEMP=85"
+Environment="MAX_TEMP=90"
 ExecStart=/usr/bin/temp-throttle ${MAX_TEMP}
 
 ProtectHome=true
