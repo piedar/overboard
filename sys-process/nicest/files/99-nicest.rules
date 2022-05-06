@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
-polkit.addRule((action, subject) => {
+polkit.addRule(function(action, subject) {
   if (action.id === "org.freedesktop.systemd1.manage-units") {
     /*
     polkit.log("action=" + action);
