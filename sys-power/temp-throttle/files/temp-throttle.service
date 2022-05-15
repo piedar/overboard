@@ -12,3 +12,6 @@ ProtectHome=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectControlGroups=true
+
+[Install]
+WantedBy=basic.target
