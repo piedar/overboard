@@ -35,7 +35,7 @@ COMMON_DEP="
   $(python_gen_cond_dep 'dev-python/numpy[${PYTHON_USEDEP}]')
 "
 BDEPEND="
-  !bindist? ( dev-lang/python:3 )
+  !bindist? ( =dev-lang/python-3* )
   doc? ( app-doc/doxygen )
   dev-util/cmake
   sys-apps/sed
