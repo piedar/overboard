@@ -3,7 +3,7 @@
 
 EAPI=7
 
-inherit cmake-utils
+inherit cmake
 
 PYTHON_COMPAT=( python3_8 )
 inherit python-r1
@@ -47,7 +47,7 @@ RDEPEND="${COMMON_DEP}"
 
 src_prepare() {
   sed -i "s|PROJECT_LIBRARY_INSTALL_DIR \"lib\"|PROJECT_LIBRARY_INSTALL_DIR \"$(get_libdir)\"|" "${S}/cmake_modules/SetupDirectories.cmake" || die "sed failed"
-  cmake-utils_src_prepare
+  cmake_src_prepare
 }
 
 src_configure() {
@@ -62,11 +62,11 @@ src_configure() {
     -DBUILD_PYTHON3="$(usex python_targets_python3_8)"
     -DPython3_EXACTVERSION="$(use python_targets_python3_8 && python3.8 -c "import platform ; print(platform.python_version())")"
   )
-  cmake-utils_src_configure
+  cmake_src_configure
 }
 
 src_install() {
-  cmake-utils_src_install
+  cmake_src_install
 
   # udev rules
   insinto "/lib/udev/rules.d/"
