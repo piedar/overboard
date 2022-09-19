@@ -4,6 +4,7 @@
 EAPI=7
 
 inherit cmake
+inherit udev
 
 PYTHON_COMPAT=( python3_8 )
 inherit python-r1
@@ -83,9 +84,14 @@ src_install() {
 }
 
 pkg_postinst() {
+  udev_reload
   if ! use bindist; then
     ewarn "The bindist USE flag is disabled. Resulting binaries may not be legal to re-distribute."
   fi
   elog "Make sure your user is in the 'video' group"
   elog "Just run 'gpasswd -a <USER> video', then have <USER> re-login."
+}
+
+pkg_postrm() {
+  udev_reload
 }
