@@ -6,7 +6,7 @@ EAPI=7
 inherit cmake
 inherit udev
 
-PYTHON_COMPAT=( python3_8 )
+PYTHON_COMPAT=( python3_10 )
 inherit python-r1
 
 GH_REPO="https://github.com/OpenKinect/${PN}"
@@ -60,8 +60,8 @@ src_configure() {
     -DBUILD_FAKENECT="$(usex fakenect)"
     -DBUILD_CV="$(usex opencv)"
     -DBUILD_OPENNI2_DRIVER="$(usex openni2)"
-    -DBUILD_PYTHON3="$(usex python_targets_python3_8)"
-    -DPython3_EXACTVERSION="$(use python_targets_python3_8 && python3.8 -c "import platform ; print(platform.python_version())")"
+    -DBUILD_PYTHON3="$(usex python_targets_python3_10)"
+    -DPython3_EXACTVERSION="$(use python_targets_python3_10 && python3.10 -c "import platform ; print(platform.python_version())")"
   )
   cmake_src_configure
 }
