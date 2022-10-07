@@ -9,9 +9,10 @@ LICENSE="GPL-2"
 
 SLOT="0"
 KEYWORDS="*"
+IUSE="ccache"
 
 RDEPEND="
   app-portage/overboard-buildjobs
-  app-portage/overboard-ccache
+  ccache? ( app-portage/overboard-ccache )
   app-portage/overboard-cpuflags
 "
