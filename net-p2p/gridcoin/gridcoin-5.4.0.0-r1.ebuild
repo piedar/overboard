@@ -13,10 +13,7 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
-IUSE_GUI="dbus qt5"
-IUSE_DAEMON="daemon"
-IUSE_OPTIONAL="+bench +boinc +ccache debug +harden +libraries pic +qrcode static test +upnp +utils systemd"
-IUSE="${IUSE_GUI} ${IUSE_DAEMON} ${IUSE_OPTIONAL}"
+IUSE="+bench +boinc +ccache daemon dbus debug +hardened +libraries pic qrcode qt5 static systemd test upnp utils"
 
 # Note: The client *CAN* *NOT* connect to the daemon like the BOINc client does.
 #       Therefore either run the daemon or the gui client. Furthermore starting the gui client while
@@ -25,27 +22,27 @@ IUSE="${IUSE_GUI} ${IUSE_DAEMON} ${IUSE_OPTIONAL}"
 #       "The GUI instance will not rpc to another wallet process."
 REQUIRED_USE="
 	^^ ( daemon qt5 )
-	dbus? ( qt5 )
-	qrcode? ( qt5 )
 "
 
 RESTRICT="!test? ( test )"
 
 RDEPEND="
 	>=dev-libs/libevent-2.1.12
-	daemon? (
-		acct-group/gridcoin
-		acct-user/gridcoin[boinc=]
-	)
 	dev-libs/boost
 	dev-libs/openssl:0/1.1
 	dev-libs/libzip
 	sys-libs/db:5.3[cxx]
-	dbus? ( dev-qt/qtdbus:5 )
-	qt5? ( dev-qt/qtcore:5 dev-qt/qtgui:5 dev-qt/qtnetwork:5 dev-qt/qtwidgets:5 dev-qt/qtconcurrent:5 dev-qt/qtcharts:5 )
-	qrcode? ( media-gfx/qrencode )
-	upnp? ( net-libs/miniupnpc )
 	boinc? ( sci-misc/boinc )
+	daemon? (
+		acct-group/gridcoin
+		acct-user/gridcoin[boinc=]
+	)
+	qt5? (
+		dev-qt/qtcore:5 dev-qt/qtgui:5 dev-qt/qtnetwork:5 dev-qt/qtwidgets:5 dev-qt/qtconcurrent:5 dev-qt/qtcharts:5
+		dbus? ( dev-qt/qtdbus:5 )
+		qrcode? ( media-gfx/qrencode )
+	)
+	upnp? ( net-libs/miniupnpc )
 	utils? ( net-p2p/bitcoin-cli dev-util/bitcoin-tx )
 "
 DEPEND="
@@ -73,12 +70,12 @@ src_prepare() {
 }
 
 src_configure() {
-	use harden && append-flags -Wa,--noexecstack
+	use hardened && append-flags -Wa,--noexecstack
 	econf \
 		$(use_enable bench)            \
 		$(use_enable ccache )          \
 		$(use_enable debug)            \
-		$(use_enable harden hardening) \
+		$(use_enable hardened hardening) \
 		$(use_enable static)           \
 		$(use_enable test tests)       \
 		$(use_with daemon)             \
@@ -116,7 +113,6 @@ src_install() {
 		doicon -s scalable "share/icons/hicolor/scalable/apps/gridcoinresearch.svg"
 	fi
 	dodoc README.md CHANGELOG.md doc/build-unix.md
-
 }
 
 pkg_postinst() {
@@ -124,6 +120,8 @@ pkg_postinst() {
 	elog "You are using a source compiled version of gridcoin."
 	use daemon && elog "The daemon can be found at /usr/bin/gridcoinresearchd"
 	use qt5 && elog "The graphical wallet can be found at /usr/bin/gridcoinresearch"
+	use dbus && ! use qt5 && elog "USE=dbus ignored due to USE=-qt5"
+	use qrcode && ! use qt5 && elog "USE=qrcode ignored due to USE=-qt5"
 	elog
 	elog "You need to configure this node with a few basic details to do anything"
 	elog "useful with gridcoin. The wallet configuration file is located at:"
