@@ -17,10 +17,11 @@ LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64"
 
-IUSE=""
+IUSE="+gnutls"
 
 COMMON_DEPEND="
-	dev-libs/openssl
+	gnutls? ( net-libs/gnutls )
+  !gnutls? ( dev-libs/openssl )
 	dev-libs/expat
 	sys-libs/ncurses
 "
@@ -34,7 +35,8 @@ src_prepare() {
 }
 
 src_configure() {
-  default
+  econf \
+		$(use_with gnutls)
 
   # add missing -ltinfow to linker options
   sed -i -e 's/^\(LIBS\s*=.*\)/\1 -ltinfow/' Makefile
