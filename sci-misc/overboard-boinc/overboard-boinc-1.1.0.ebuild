@@ -3,6 +3,8 @@
 
 EAPI=8
 
+inherit systemd
+
 DESCRIPTION="automatic configuration for sci-misc/boinc"
 GITHUB_REPO="https://github.com/piedar/overboard"
 HOMEPAGE="${GITHUB_REPO}"
@@ -23,6 +25,9 @@ S="${WORKDIR}"
 
 src_install() {
   default
+
+  systemd_dounit "${FILESDIR}/boinc-client-network-retry.service"
+  systemd_enable_service "boinc-client.service" "boinc-client-network-retry.service"
 
   insinto "/lib/systemd/system/boinc-client.service.d/"
   

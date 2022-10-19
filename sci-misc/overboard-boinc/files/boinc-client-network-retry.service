@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: LGPL-3.0-only
+
+[Unit]
+Description=Retries stuck boinc-client network transfers
+After=boinc-client.service network-online.target
+
+[Service]
+Type=simple
+User=boinc
+WorkingDirectory=/var/lib/boinc
+ExecStart=bash -c 'while sleep 60; do boinccmd --get_file_transfers | grep --count "xfer active" && boinccmd --network_available; done'
+
+CapabilityBoundingSet=
+DeviceAllow=
+LockPersonality=true
+MemoryDenyWriteExecute=true
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+PrivateUsers=true
+ProcSubset=pid
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectProc=invisible
+ProtectSystem=strict
+RemoveIPC=true
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+
+# this breaks boinccmd communication
+#PrivateNetwork=true
+
+[Install]
+WantedBy=boinc-client.service
