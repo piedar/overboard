@@ -12,7 +12,7 @@ LICENSE="LGPL-3"
 
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="hardened opencl thermal"
+IUSE="hardened network-retry opencl thermal"
 
 RDEPEND="
   sci-misc/boinc[opencl=]
@@ -27,13 +27,15 @@ src_install() {
   default
 
   systemd_dounit "${FILESDIR}/boinc-client-network-retry.service"
-  systemd_enable_service "boinc-client.service" "boinc-client-network-retry.service"
+  if use network-retry; then
+    systemd_enable_service "boinc-client.service" "boinc-client-network-retry.service"
+  fi
 
   insinto "/lib/systemd/system/boinc-client.service.d/"
-  
+
   doins "${FILESDIR}/overboard-reload.conf"
   doins "${FILESDIR}/overboard-nicest.conf"
-  
+
   if use hardened; then
     doins "${FILESDIR}/overboard-hardened.conf"
     if use opencl; then
