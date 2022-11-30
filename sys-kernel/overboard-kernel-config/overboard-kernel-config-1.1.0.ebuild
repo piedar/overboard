@@ -10,7 +10,7 @@ LICENSE="LGPL-3"
 
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="btrfs reiserfs"
+IUSE="btrfs reiserfs systemd"
 
 S="${WORKDIR}"
 
@@ -23,10 +23,12 @@ src_install() {
 
   insinto "/etc/kernel/config.d/"
   insopts --mode=444
+  doins "${FILESDIR}/00-overboard-devices-industrial-obscure-no.config"
   doins "${FILESDIR}/00-overboard-devices-io-obscure-no.config"
   doins "${FILESDIR}/00-overboard-devices-network-obscure-no.config"
   doins "${FILESDIR}/00-overboard-filesystems-obscure-no.config"
   doins "${FILESDIR}/00-overboard-filesystems-btrfs-$(_yesno btrfs).config"
   doins "${FILESDIR}/00-overboard-filesystems-reiserfs-$(_yesno reiserfs).config"
+  doins "${FILESDIR}/00-overboard-gentoo-init-systemd-$(_yesno systemd).config"
   doins "${FILESDIR}/00-overboard-partitions-obscure-no.config"
 }
