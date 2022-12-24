@@ -73,7 +73,7 @@ src_configure() {
 	use hardened && append-flags -Wa,--noexecstack
 	econf \
 		$(use_enable bench)            \
-		$(use_enable ccache )          \
+		$(use_enable ccache)           \
 		$(use_enable debug)            \
 		$(use_enable hardened hardening) \
 		$(use_enable static)           \
@@ -92,15 +92,18 @@ src_install() {
 	if use daemon ; then
 		newbin src/gridcoinresearchd gridcoinresearchd
 		newman doc/gridcoinresearchd.1 gridcoinresearchd.1
-		newinitd "${FILESDIR}"/gridcoin.init gridcoin
+		newinitd "${FILESDIR}"/gridcoinresearchd.init gridcoinresearchd
 		if use systemd ; then
-			systemd_dounit "${FILESDIR}"/gridcoin.service
+			systemd_dounit "${FILESDIR}"/gridcoinresearchd.service
+			if use hardened ; then
+				insinto "/lib/systemd/system/gridcoinresearchd.service.d/"
+				doins "${FILESDIR}/hardened.conf"
+			fi
 		fi
 		diropts -o${PN} -g${PN}
 		keepdir /var/lib/${PN}/.GridcoinResearch/
 		newconfd "${FILESDIR}"/gridcoinresearch.conf gridcoinresearch
 		fowners gridcoin:gridcoin /etc/conf.d/gridcoinresearch
-		fperms 0660 /etc/conf.d/gridcoinresearch
 		dosym ../../../../etc/conf.d/gridcoinresearch /var/lib/${PN}/.GridcoinResearch/gridcoinresearch.conf
 	fi
 	if use qt5 ; then

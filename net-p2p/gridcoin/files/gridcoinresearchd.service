@@ -1,0 +1,28 @@
+[Unit]
+Description=Gridcoin Wallet Daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=gridcoin
+Group=gridcoin
+
+StateDirectory=gridcoin
+StateDirectoryMode=0710
+
+Type=simple
+Restart=on-failure
+TimeoutStopSec=600
+ExecStart=/usr/bin/gridcoinresearchd -daemon=0 -daemonwait=0 -printtoconsole=1 \
+    -conf=/etc/conf.d/gridcoinresearch -datadir=${STATE_DIRECTORY}
+
+# default hardening as recommended upstream
+MemoryDenyWriteExecute=true
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
