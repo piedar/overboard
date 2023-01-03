@@ -16,6 +16,7 @@ IUSE="hardened network-retry opencl thermal"
 
 RDEPEND="
   sci-misc/boinc[opencl=]
+  >=sys-apps/systemd-252
   sys-process/nicest
   hardened? ( opencl? ( dev-util/clinfo ) )
   thermal? ( sys-power/temp-throttle )
