@@ -25,7 +25,10 @@ src_install() {
   insopts --mode=444
   doins "${FILESDIR}/00-overboard-devices-industrial-obscure-no.config"
   doins "${FILESDIR}/00-overboard-devices-io-obscure-no.config"
+  doins "${FILESDIR}/00-overboard-devices-input-gameport-no.config"
+  doins "${FILESDIR}/00-overboard-devices-input-touchscreen-no.config"
   doins "${FILESDIR}/00-overboard-devices-network-obscure-no.config"
+  doins "${FILESDIR}/00-overboard-devices-parallel-port-no.config"
   doins "${FILESDIR}/00-overboard-filesystems-obscure-no.config"
   doins "${FILESDIR}/00-overboard-filesystems-btrfs-$(_yesno btrfs).config"
   doins "${FILESDIR}/00-overboard-filesystems-reiserfs-$(_yesno reiserfs).config"
