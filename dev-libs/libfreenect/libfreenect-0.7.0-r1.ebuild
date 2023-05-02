@@ -7,7 +7,7 @@ inherit cmake
 inherit udev
 
 PYTHON_COMPAT=( python3_11 )
-inherit python-r1
+inherit python-single-r1
 
 GH_REPO="https://github.com/OpenKinect/${PN}"
 DESCRIPTION="Drivers and libraries for the Xbox Kinect device"
@@ -17,6 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 LICENSE="Apache-2.0 GPL-2"
 IUSE="bindist +c_sync +cpp doc examples +fakenect opencv openni2"
+REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
 if [[ "${PV}" == "9999" ]] ; then
   inherit git-r3
@@ -60,8 +61,8 @@ src_configure() {
     -DBUILD_FAKENECT="$(usex fakenect)"
     -DBUILD_CV="$(usex opencv)"
     -DBUILD_OPENNI2_DRIVER="$(usex openni2)"
-    -DBUILD_PYTHON3="$(usex python_targets_python3_11)"
-    -DPython3_EXACTVERSION="$(use python_targets_python3_11 && python3.11 -c "import platform ; print(platform.python_version())")"
+    -DBUILD_PYTHON3="$(usex python_single_target_python3_11)"
+    -DPython3_EXACTVERSION="$(use python_single_target_python3_11 && ${EPYTHON} -c "import platform ; print(platform.python_version())")"
   )
   cmake_src_configure
 }
