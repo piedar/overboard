@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Foundation
+# Copyright 1999-2023 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -6,7 +6,7 @@ EAPI=7
 inherit cmake
 inherit udev
 
-PYTHON_COMPAT=( python3_10 )
+PYTHON_COMPAT=( python3_11 )
 inherit python-r1
 
 GH_REPO="https://github.com/OpenKinect/${PN}"
@@ -60,8 +60,8 @@ src_configure() {
     -DBUILD_FAKENECT="$(usex fakenect)"
     -DBUILD_CV="$(usex opencv)"
     -DBUILD_OPENNI2_DRIVER="$(usex openni2)"
-    -DBUILD_PYTHON3="$(usex python_targets_python3_10)"
-    -DPython3_EXACTVERSION="$(use python_targets_python3_10 && python3.10 -c "import platform ; print(platform.python_version())")"
+    -DBUILD_PYTHON3="$(usex python_targets_python3_11)"
+    -DPython3_EXACTVERSION="$(use python_targets_python3_11 && python3.11 -c "import platform ; print(platform.python_version())")"
   )
   cmake_src_configure
 }
