@@ -21,7 +21,7 @@ IUSE="+gnutls"
 
 COMMON_DEPEND="
 	gnutls? ( net-libs/gnutls )
-  !gnutls? ( dev-libs/openssl )
+  !gnutls? ( dev-libs/openssl:0= )
 	dev-libs/expat
 	sys-libs/ncurses
 "
