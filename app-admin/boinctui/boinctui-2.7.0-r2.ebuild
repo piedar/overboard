@@ -20,10 +20,10 @@ KEYWORDS="~amd64"
 IUSE="+gnutls"
 
 COMMON_DEPEND="
-	gnutls? ( net-libs/gnutls )
+  gnutls? ( net-libs/gnutls )
   !gnutls? ( dev-libs/openssl:0= )
-	dev-libs/expat
-	sys-libs/ncurses
+  dev-libs/expat
+  sys-libs/ncurses
 "
 BDEPEND="sys-devel/autoconf"
 DEPEND="${COMMON_DEPEND}"
@@ -36,7 +36,7 @@ src_prepare() {
 
 src_configure() {
   econf \
-		$(use_with gnutls)
+    $(use_with gnutls)
 
   # add missing -ltinfow to linker options
   sed -i -e 's/^\(LIBS\s*=.*\)/\1 -ltinfow/' Makefile
