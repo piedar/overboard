@@ -36,7 +36,7 @@ src_prepare() {
 
 src_configure() {
   econf \
-    $(use_with gnutls)
+    $(use gnutls || echo '--without-gnutls') # --with-gnutls does not work correctly
 
   # add missing -ltinfow to linker options
   sed -i -e 's/^\(LIBS\s*=.*\)/\1 -ltinfow/' Makefile
