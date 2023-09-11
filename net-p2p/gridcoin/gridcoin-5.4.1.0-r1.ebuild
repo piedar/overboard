@@ -29,7 +29,7 @@ RESTRICT="!test? ( test )"
 RDEPEND="
 	>=dev-libs/libevent-2.1.12
 	>=dev-libs/boost-1.60.0:0=
-	dev-libs/openssl:0/1.1
+	>=dev-libs/openssl-1.1:0=
 	dev-libs/libzip
 	sys-libs/db:5.3[cxx]
 	boinc? ( sci-misc/boinc )
