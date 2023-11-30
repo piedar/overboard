@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Foundation
+# Copyright 1999-2023 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -12,13 +12,17 @@ LICENSE="LGPL-3"
 
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="hardened network-retry opencl thermal"
+IUSE="hardened network-retry opencl thermal video_cards_radeonsi"
 
 RDEPEND="
   sci-misc/boinc[opencl=]
   >=sys-apps/systemd-252
   sys-process/nicest
   hardened? ( opencl? ( dev-util/clinfo ) )
+  opencl? (
+    hardened? ( dev-util/clinfo )
+    video_cards_radeonsi? ( media-libs/mesa[opencl,video_cards_radeonsi] )
+  )
   thermal? ( sys-power/temp-throttle )
 "
 
@@ -42,6 +46,10 @@ src_install() {
     if use opencl; then
       doins "${FILESDIR}/overboard-hardened-opencl.conf"
     fi
+  fi
+
+  if use opencl && use video_cards_radeonsi; then
+    doins "${FILESDIR}/overboard-opencl-radeonsi.conf"
   fi
 
   if use thermal; then
