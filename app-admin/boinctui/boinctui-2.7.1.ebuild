@@ -9,7 +9,7 @@ DESCRIPTION="a curses-based terminal BOINC client manager"
 GITHUB_REPO="https://github.com/suleman1971/boinctui"
 HOMEPAGE="${GITHUB_REPO}"
 
-COMMIT="35d0ddc601df12b09632c5cd7bf31c8b8db6649f"
+COMMIT="6656f288580170121f53d0e68c35077f5daa700b"
 SRC_URI="${GITHUB_REPO}/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
 S="${WORKDIR}/${PN}-${COMMIT}"
 
