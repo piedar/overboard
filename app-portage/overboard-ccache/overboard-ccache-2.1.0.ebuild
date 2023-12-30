@@ -31,7 +31,14 @@ EOF
   cat > "${ED}/etc/ccache.conf" << EOF
 # preserve cache across GCC rebuilds and
 # introspect GCC changes through GCC wrapper
-compiler_check = %compiler% -v
+compiler_check = %compiler% -dumpversion
+
+# Don't include the current directory when calculating
+# hashes for the cache. This allows re-use of the cache
+# across different package versions, at the cost of
+# slightly incorrect paths in debugging info.
+# https://ccache.dev/manual/4.4.html#_performance
+hash_dir = false
 EOF
 }
 
