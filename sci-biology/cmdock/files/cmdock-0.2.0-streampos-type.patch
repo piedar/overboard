@@ -1,0 +1,22 @@
+commit cbd3bce808fada9889b50bdada0d340b382db9ec
+Author: Benn Snyder <benn.snyder@gmail.com>
+Date:   Tue Jan 2 20:43:32 2024 -0500
+
+    fix: use correct std::streamoff type
+---
+ src/lib/Rbt.cxx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lib/Rbt.cxx b/src/lib/Rbt.cxx
+index e953312..b680be4 100644
+--- a/src/lib/Rbt.cxx
++++ b/src/lib/Rbt.cxx
+@@ -556,7 +556,7 @@ std::string Rbt::LastLineInFile (std::string filename) {
+         if(file.peek() == '\n') {
+             //Start searching for \n occurrences
+             file.seekg(-1, std::ios_base::cur);
+-            for(uint64_t i = file.tellg(); i > 0; i--){
++            for(std::streamoff i = file.tellg(); i > 0; i--){
+                 if(file.peek() == '\n') {
+                     //Found
+                     file.get();

@@ -63,6 +63,8 @@ foreach_wrapper_job() {
 }
 
 src_prepare() {
+	# todo: fix upstream
+	eapply "${FILESDIR}/${PN}-0.2.0-streampos-type.patch"
 	default
 	python_fix_shebang "${S}"/bin
 }
