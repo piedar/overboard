@@ -1,0 +1,38 @@
+RBT_PARAMETER_FILE_V1.00
+TITLE rdrp_v_2
+#corona vs on RdRp
+#htvs opt _ off
+#100 runs b 1
+
+RECEPTOR_FILE target.mol2
+#flex 6 A!
+RECEPTOR_FLEX 6.0
+
+#------------------------------
+#cavitiy iz ref liganda
+SECTION MAPPER
+   SITE_MAPPER RbtLigandSiteMapper
+   RADIUS 12.0
+   SMALL_SPHERE 1.0
+   MIN_VOLUME 100
+   MAX_CAVITIES 1
+   VOL_INCR 0.0
+   GRIDSTEP 0.5
+END_SECTION
+#end cav def###########
+
+#------------------------------
+#da ne uide ligand
+#restraint
+SECTION CAVITY
+   SCORING_FUNCTION RbtCavityGridSF
+   WEIGHT 1.0
+END_SECTION
+#end restraint
+
+#------------------------------
+#no waters
+#no restrictors
+#prep_org RdRp - on new RdRps
+# good luck to us all !
+#end prm file definition

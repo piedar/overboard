@@ -15,7 +15,7 @@ S="${WORKDIR}/${PN}-v${PV}"
 LICENSE="LGPL-3 ZLIB"
 SLOT="0/${PV}"
 KEYWORDS="~amd64"
-IUSE="apidoc boinc cpu_flags_x86_sse2 doc test"
+IUSE="apidoc boinc cpu_flags_x86_sse2 doc pgo test"
 RESTRICT="!test? ( test )"
 
 RDEPEND="
@@ -37,6 +37,9 @@ BDEPEND="
 			dev-python/insipid-sphinx-theme[${PYTHON_USEDEP}]
 			dev-python/sphinx[${PYTHON_USEDEP}]
 		')
+	)
+	pgo? (
+		sys-apps/coreutils
 	)
 	test? ( ${PYTHON_DEPS} )
 "
@@ -81,6 +84,25 @@ src_configure() {
 	meson_src_configure
 
 	use cpu_flags_x86_sse2 || append-cppflags "-DBUNDLE_NO_SSE"
+}
+
+src_compile() {
+	if use pgo; then
+		meson configure -Db_pgo=generate "${BUILD_DIR}"
+	fi
+
+	meson_src_compile
+
+	if use pgo; then
+		# generate pgo profile with real project data
+		# run only for a few minutes because the full job would take many hours
+		timeout --signal=INT --preserve-status "${PGO_TIMEOUT:-10m}" \
+			"${BUILD_DIR}/cmdock" -c -j 1 -b 1 -x -r "${FILESDIR}/pgo/target.prm" -p "${S}/data/scripts/dock.prm" \
+			-f "${FILESDIR}/pgo/htvs.ptc" -i "${FILESDIR}/pgo/ligands.sdf" -o "${T}/pgo-docking_out"
+		# rebuild using the pgo profile
+		meson configure -Db_pgo=use "${BUILD_DIR}"
+		meson_src_compile
+	fi
 }
 
 src_install() {
