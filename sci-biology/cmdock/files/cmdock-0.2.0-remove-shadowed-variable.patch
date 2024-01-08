@@ -1,0 +1,20 @@
+commit 7ec046282efd8e1725ec543df4de9fa2d23576ae
+Author: Benn Snyder <benn.snyder@gmail.com>
+Date:   Sun Jan 7 01:54:15 2024 -0500
+
+    fix: remove shadowed class variable
+    
+    m_bAppend was never initialized in the derived class, causing a failure to open the output file
+
+diff --git a/include/RbtMdlFileSink.h b/include/RbtMdlFileSink.h
+index e7b9adc..c1d19d8 100644
+--- a/include/RbtMdlFileSink.h
++++ b/include/RbtMdlFileSink.h
+@@ -125,7 +125,6 @@ private:
+   bool m_bFirstOpen = true;
+   RbtAtomIdMap m_atomIdMap; // Keep track of logical atom IDs as rendered to
+                             // file
+-  bool m_bAppend; // If true, Write() appends to file rather than overwriting
+   bool m_bCheckpointMode = false;
+   bool m_bZip = false;
+   bool m_bBestPoses = false;
