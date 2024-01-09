@@ -39,6 +39,7 @@ BDEPEND="
 		')
 	)
 	pgo? (
+		app-misc/jq
 		sys-apps/coreutils
 	)
 	test? ( ${PYTHON_DEPS} )
@@ -100,6 +101,13 @@ src_compile() {
 		timeout --signal=INT --preserve-status "${PGO_TIMEOUT:-10m}" \
 			"${BUILD_DIR}/cmdock" -c -j 1 -b 1 -x -r "${FILESDIR}/pgo/target.prm" -p "${S}/data/scripts/dock.prm" \
 			-f "${FILESDIR}/pgo/htvs.ptc" -i "${FILESDIR}/pgo/ligands.sdf" -o "${T}/pgo-docking_out"
+
+		# let meson detect the compiler rather than relying on USE flag or trying to parse CXX
+		COMPILER="$(meson introspect "${BUILD_DIR}" --compilers | jq --raw-output '.build.cpp.id')"
+		if [ "${COMPILER}" = 'clang' ]; then
+			llvm-profdata merge "${BUILD_DIR}"/*.profraw -output="${BUILD_DIR}/default.profdata" || die "llvm-profdata failed"
+		fi
+
 		# rebuild using the pgo profile
 		meson configure -Db_pgo=use "${BUILD_DIR}"
 		meson_src_compile
