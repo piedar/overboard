@@ -105,11 +105,17 @@ src_compile() {
 		# let meson detect the compiler rather than relying on USE flag or trying to parse CXX
 		COMPILER="$(meson introspect "${BUILD_DIR}" --compilers | jq --raw-output '.build.cpp.id')"
 		if [ "${COMPILER}" = 'clang' ]; then
+			# do not assume all code paths were exercised
+			PGO_FLAGS_DEFAULT="-fno-profile-sample-accurate"
 			llvm-profdata merge "${BUILD_DIR}"/*.profraw -output="${BUILD_DIR}/default.profdata" || die "llvm-profdata failed"
+		else
+			# do not assume all code paths were exercised
+			PGO_FLAGS_DEFAULT="-fprofile-partial-training"
 		fi
 
 		# rebuild using the pgo profile
-		meson configure -Db_pgo=use "${BUILD_DIR}"
+		CFLAGS="${PGO_FLAGS_DEFAULT} ${CFLAGS}" CXXFLAGS="${PGO_FLAGS_DEFAULT} ${CXXFLAGS}" \
+			meson configure -Db_pgo=use "${BUILD_DIR}"
 		meson_src_compile
 	fi
 }
