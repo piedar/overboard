@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Gentoo Authors
+# Copyright 2021-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -23,9 +23,9 @@ RDEPEND="
 "
 DEPEND="
 	dev-cpp/eigen:3
-	dev-cpp/indicators
+	>=dev-cpp/indicators-2.3-r1
 	>=dev-cpp/pcg-cpp-0.98.1_p20210406-r1
-	dev-libs/cxxopts
+	>=dev-libs/cxxopts-3
 "
 BDEPEND="
 	apidoc? (
