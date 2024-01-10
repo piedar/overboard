@@ -45,6 +45,12 @@ BDEPEND="
 	test? ( ${PYTHON_DEPS} )
 "
 
+# todo: fix upstream
+PATCHES=(
+	"${FILESDIR}/${PN}-0.2.0-streampos-type.patch"
+	"${FILESDIR}/${PN}-0.2.0-remove-shadowed-variable.patch"
+)
+
 DOCS=( README.md changelog.md )
 
 BOINC_MASTER_URL="https://www.sidock.si/sidock/"
@@ -67,9 +73,6 @@ foreach_wrapper_job() {
 }
 
 src_prepare() {
-	# todo: fix upstream
-	eapply "${FILESDIR}/${PN}-0.2.0-streampos-type.patch"
-	eapply "${FILESDIR}/${PN}-0.2.0-remove-shadowed-variable.patch"
 	default
 	python_fix_shebang "${S}"/bin
 }
