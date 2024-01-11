@@ -77,6 +77,11 @@ src_prepare() {
 }
 
 src_configure() {
+	if tc-is-gcc && tc-is-lto && ! use pgo; then
+		ewarn "filtering gcc lto because it degrades performance without pgo"
+		filter-lto
+	fi
+
 	use cpu_flags_x86_sse2 || append-cppflags "-DBUNDLE_NO_SSE"
 
 	# very weird directory layout
