@@ -5,7 +5,7 @@ EAPI=8
 
 PYTHON_COMPAT=( python3_{10..11} )
 BOINC_APP_OPTIONAL="true"
-inherit boinc-app flag-o-matic meson optfeature python-any-r1
+inherit boinc-app flag-o-matic meson optfeature python-any-r1 toolchain-funcs
 
 DESCRIPTION="Program for docking ligands to proteins and nucleic acids"
 HOMEPAGE="https://gitlab.com/Jukic/cmdock"
@@ -39,7 +39,6 @@ BDEPEND="
 		')
 	)
 	pgo? (
-		app-misc/jq
 		sys-apps/coreutils
 	)
 	test? ( ${PYTHON_DEPS} )
@@ -105,9 +104,7 @@ src_compile() {
 			"${BUILD_DIR}/cmdock" -c -j 1 -b 1 -x -r "${FILESDIR}/pgo/target.prm" -p "${S}/data/scripts/dock.prm" \
 			-f "${FILESDIR}/pgo/htvs.ptc" -i "${FILESDIR}/pgo/ligands.sdf" -o "${T}/pgo-docking_out"
 
-		# let meson detect the compiler rather than relying on USE flag or trying to parse CXX
-		COMPILER="$(meson introspect "${BUILD_DIR}" --compilers | jq --raw-output '.build.cpp.id')"
-		if [ "${COMPILER}" = 'clang' ]; then
+		if tc-is-clang; then
 			# do not assume all code paths were exercised
 			PGO_FLAGS_DEFAULT="-fno-profile-sample-accurate"
 			llvm-profdata merge "${BUILD_DIR}"/*.profraw -output="${BUILD_DIR}/default.profdata" || die "llvm-profdata failed"
