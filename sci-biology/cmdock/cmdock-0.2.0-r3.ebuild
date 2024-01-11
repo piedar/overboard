@@ -78,6 +78,8 @@ src_prepare() {
 }
 
 src_configure() {
+	use cpu_flags_x86_sse2 || append-cppflags "-DBUNDLE_NO_SSE"
+
 	# very weird directory layout
 	local emesonargs=(
 		--prefix="${INSTALL_PREFIX}"
@@ -87,8 +89,6 @@ src_configure() {
 		-Ddocdir="${EPREFIX}"/usr/share/doc/${PF}
 	)
 	meson_src_configure
-
-	use cpu_flags_x86_sse2 || append-cppflags "-DBUNDLE_NO_SSE"
 }
 
 src_compile() {
