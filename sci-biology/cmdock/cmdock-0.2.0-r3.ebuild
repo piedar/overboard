@@ -5,7 +5,7 @@ EAPI=8
 
 PYTHON_COMPAT=( python3_{10..11} )
 BOINC_APP_OPTIONAL="true"
-inherit boinc-app flag-o-matic meson optfeature python-any-r1 toolchain-funcs
+inherit boinc-app flag-o-matic meson optfeature python-any-r1 toolchain-funcs toolchain-override
 
 DESCRIPTION="Program for docking ligands to proteins and nucleic acids"
 HOMEPAGE="https://gitlab.com/Jukic/cmdock"
@@ -15,7 +15,8 @@ S="${WORKDIR}/${PN}-v${PV}"
 LICENSE="LGPL-3 ZLIB"
 SLOT="0/${PV}"
 KEYWORDS="~amd64"
-IUSE="apidoc boinc cpu_flags_x86_sse2 doc pgo test"
+# todo: make openmp optional
+IUSE="apidoc boinc clang cpu_flags_x86_sse2 doc pgo test"
 RESTRICT="!test? ( test )"
 
 RDEPEND="
@@ -27,10 +28,19 @@ DEPEND="
 	>=dev-cpp/pcg-cpp-0.98.1_p20210406-r1
 	>=dev-libs/cxxopts-3
 "
+BDEPEND_CLANG="sys-devel/clang"
+BDEPEND_CLANG_PGO="
+	sys-devel/llvm
+	sys-libs/compiler-rt-sanitizers[profile]
+"
 BDEPEND="
 	apidoc? (
 		app-doc/doxygen
 		dev-texlive/texlive-fontutils
+	)
+	clang? (
+		${BDEPEND_CLANG}
+		pgo? ( ${BDEPEND_CLANG_PGO} )
 	)
 	doc? (
 		$(python_gen_any_dep '
@@ -77,6 +87,16 @@ src_prepare() {
 }
 
 src_configure() {
+	if use clang; then
+		tc-use-clang
+	elif tc-is-clang; then
+		# when USE="-clang" but CXX="clang++" we cannot rely on BDEPEND
+		# continue anyway as long as the build dependencies are installed
+		# if these were runtime dependencies this would not be safe
+		for P in ${BDEPEND_CLANG}; do require_version -b "${P}"; done
+		use pgo && for P in ${BDEPEND_CLANG_PGO}; do require_version -b "${P}"; done
+	fi
+
 	if tc-is-gcc && tc-is-lto && ! use pgo; then
 		ewarn "filtering gcc lto because it degrades performance without pgo"
 		filter-lto
