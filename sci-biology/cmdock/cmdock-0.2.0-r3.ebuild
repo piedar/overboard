@@ -26,7 +26,7 @@ DEPEND="
 	dev-cpp/eigen:3
 	>=dev-cpp/indicators-2.3-r1
 	>=dev-cpp/pcg-cpp-0.98.1_p20210406-r1
-	>=dev-libs/cxxopts-3
+	=dev-libs/cxxopts-3.0*
 "
 BDEPEND_CLANG="sys-devel/clang"
 BDEPEND_CLANG_PGO="
