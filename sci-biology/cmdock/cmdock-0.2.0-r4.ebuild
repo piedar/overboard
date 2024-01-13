@@ -102,6 +102,13 @@ src_configure() {
 		filter-lto
 	fi
 
+	if use pgo; then
+		# do not assume all code paths are exercised during pgo training
+		tc-is-clang && PGO_FLAGS_DEFAULT="-fno-profile-sample-accurate" || PGO_FLAGS_DEFAULT="-fprofile-partial-training"
+		export CFLAGS="${PGO_FLAGS_DEFAULT} ${CFLAGS}"
+		export CXXFLAGS="${PGO_FLAGS_DEFAULT} ${CXXFLAGS}"
+	fi
+
 	use cpu_flags_x86_sse2 || append-cppflags "-DBUNDLE_NO_SSE"
 
 	# very weird directory layout
@@ -130,17 +137,11 @@ src_compile() {
 			-f "${FILESDIR}/pgo/htvs.ptc" -i "${FILESDIR}/pgo/ligands.sdf" -o "${T}/pgo-docking_out"
 
 		if tc-is-clang; then
-			# do not assume all code paths were exercised
-			PGO_FLAGS_DEFAULT="-fno-profile-sample-accurate"
 			llvm-profdata merge "${BUILD_DIR}"/*.profraw -output="${BUILD_DIR}/default.profdata" || die "llvm-profdata failed"
-		else
-			# do not assume all code paths were exercised
-			PGO_FLAGS_DEFAULT="-fprofile-partial-training"
 		fi
 
 		# rebuild using the pgo profile
-		CFLAGS="${PGO_FLAGS_DEFAULT} ${CFLAGS}" CXXFLAGS="${PGO_FLAGS_DEFAULT} ${CXXFLAGS}" \
-			meson configure -Db_pgo=use "${BUILD_DIR}"
+		meson configure -Db_pgo=use "${BUILD_DIR}"
 		meson_src_compile
 	fi
 }
