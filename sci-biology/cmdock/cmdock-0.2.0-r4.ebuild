@@ -137,7 +137,7 @@ src_compile() {
 			-f "${FILESDIR}/pgo/htvs.ptc" -i "${FILESDIR}/pgo/ligands.sdf" -o "${T}/pgo-docking_out"
 
 		if tc-is-clang; then
-			llvm-profdata merge "${BUILD_DIR}"/*.profraw -output="${BUILD_DIR}/default.profdata" || die "llvm-profdata failed"
+			llvm-profdata merge --instr "${BUILD_DIR}"/*.profraw --output="${BUILD_DIR}/default.profdata" || die "llvm-profdata failed"
 		fi
 
 		# rebuild using the pgo profile
