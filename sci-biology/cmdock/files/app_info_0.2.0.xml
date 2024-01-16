@@ -34,7 +34,7 @@
 	<file_ref>
 		<file_name>cmdock-@PV@</file_name>
 		<open_name>cmdock</open_name>
-		<copy_file/>
+		<copy_file>0</copy_file>
 	</file_ref>
 	<file_ref>
 		<file_name>cmdock-l_job_@PV@.xml</file_name>

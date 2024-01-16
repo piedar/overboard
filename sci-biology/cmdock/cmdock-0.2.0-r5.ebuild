@@ -154,10 +154,13 @@ src_install() {
 		doappinfo "${FILESDIR}"/app_info_${PV}.xml
 		dowrapper cmdock-l
 
-		# install cmdock executable
-		exeinto "$(get_project_root)"
-		exeopts --owner root --group boinc
-		newexe "${D}${INSTALL_PREFIX}"/bin/cmdock cmdock-${PV}
+		# link cmdock executable
+		# this used to copy cmdock into the project directory...
+		# but this can cause failures after rebuilding the package and restarting boinc
+		# because the new cmdock binary might not match up with libcmdock.so
+		# could copy ${INSTALL_PREFIX} to the project directory so that each task gets a stable snapshot
+		# but this would require listing every single file in app_info.xml
+		dosym -r "${INSTALL_PREFIX}/bin/cmdock" "$(get_project_root)/cmdock-${PV}"
 
 		# install a blank file
 		touch "${T}"/docking_out || die
