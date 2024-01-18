@@ -9,12 +9,14 @@ LICENSE="GPL-2"
 
 SLOT="0"
 KEYWORDS="amd64 ~x86"
+IUSE="nicest"
 
 BDEPEND="
   dev-lang/python
 "
 RDEPEND="
-  sys-apps/util-linux
+  nicest? ( sys-process/nicest )
+  !nicest? ( sys-apps/util-linux )
 "
 
 S="${WORKDIR}"
@@ -26,10 +28,19 @@ numcpu = max(1, len(os.sched_getaffinity(0)) if 'sched_getaffinity' in dir(os) e
 config = f"--jobs={math.ceil(1.25 * numcpu)} --load-average={math.ceil(4.00 * numcpu)}"
 print(f"MAKEOPTS=\"\${{MAKEOPTS}} {config}\"")
 print(f"EMERGE_DEFAULT_OPTS=\"\${{EMERGE_DEFAULT_OPTS}} {config} --keep-going\"")
-print("PORTAGE_NICENESS=\"19\"")
-print("PORTAGE_SCHEDULING_POLICY=\"batch\"")
-print("PORTAGE_IONICE_COMMAND=\"ionice --class idle --pid \\\${PID}\"")
 EOF
+
+  if use nicest; then
+    cat <<EOF
+PORTAGE_IONICE_COMMAND="renicest \\\${PID}"
+EOF
+  else
+    cat <<EOF
+PORTAGE_NICENESS="19"
+PORTAGE_SCHEDULING_POLICY="batch"
+PORTAGE_IONICE_COMMAND="ionice --class idle --pid \\\${PID}"
+EOF
+  fi
 }
 
 pkg_preinst() {
