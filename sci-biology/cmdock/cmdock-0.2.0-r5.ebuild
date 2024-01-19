@@ -16,17 +16,25 @@ LICENSE="LGPL-3 ZLIB"
 SLOT="0/${PV}"
 KEYWORDS="~amd64"
 # todo: make openmp optional
-IUSE="apidoc boinc clang cpu_flags_x86_sse2 doc pgo test"
-RESTRICT="!test? ( test )"
+IUSE="apidoc boinc clang cpu_flags_x86_sse2 doc perfdata-gen perfdata-use pgo test"
+REQUIRED_USE="perfdata-use? ( clang )"
+RESTRICT="perfdata-gen? ( strip ) !test? ( test )"
 
 RDEPEND="
 	boinc? ( sci-misc/boinc-wrapper )
+	perfdata-gen? (
+		app-alternatives/sh
+		>=dev-util/perfdata-0.3.1
+	)
 "
 DEPEND="
 	dev-cpp/eigen:3
 	>=dev-cpp/indicators-2.3-r1
 	>=dev-cpp/pcg-cpp-0.98.1_p20210406-r1
 	=dev-libs/cxxopts-3.0*
+	perfdata-use? (
+		sci-biology/cmdock[boinc?,perfdata-gen]
+	)
 "
 BDEPEND_CLANG="sys-devel/clang"
 BDEPEND_CLANG_PGO="
@@ -41,6 +49,14 @@ BDEPEND="
 	clang? (
 		${BDEPEND_CLANG}
 		pgo? ( ${BDEPEND_CLANG_PGO} )
+	)
+	perfdata-use? (
+		dev-util/perfdata
+		boinc? (
+			acct-user/boinc
+			sys-apps/coreutils
+			sys-apps/util-linux
+		)
 	)
 	doc? (
 		$(python_gen_any_dep '
@@ -68,7 +84,9 @@ BOINC_APP_HELPTEXT=\
 "The easiest way to do something useful with this application
 is to attach it to SiDock@home BOINC project."
 
-INSTALL_PREFIX="${EPREFIX}/opt/${P}"
+readonly INSTALL_PREFIX="${EPREFIX}/opt/${P}"
+readonly CMDOCK_EXE="${INSTALL_PREFIX}/bin/cmdock"
+: "${PERFDATA_PROFILE_DIR_BOINC:=${EPREFIX%/}$(get_boincdir)/.cache/perfdata/cmdock}"
 
 python_check_deps() {
 	use doc || return 0
@@ -79,6 +97,27 @@ python_check_deps() {
 
 foreach_wrapper_job() {
 	sed -e "s:@PREFIX@:${INSTALL_PREFIX}:g" -i "${1}" || die
+}
+
+pkg_setup() {
+	python-any-r1_pkg_setup
+
+	if use boinc && use perfdata-use && [ "${MERGE_TYPE}" != 'binary' ] && [ -z "${PERFDATA_PROFILE}" ]; then
+		# collect perfdata created by cmdock running under boinc
+		# run as the boinc user for safety and so intermediate files are appropriately owned
+		# first need to grant access to the portage tempdir
+		local PERFDATA_BOINC_TMPDIR="$(mktemp -d)"
+		chown boinc "${PERFDATA_BOINC_TMPDIR:?}"
+		chmod o+x "${PORTAGE_BUILDDIR:?}"
+		# generate prof
+		local PERFDATA_PROFILE_BOINC="${PERFDATA_BOINC_TMPDIR:?}/perfdata.prof"
+		TMPDIR="${PERFDATA_BOINC_TMPDIR}" runuser -u boinc -- \
+			perfdata-mkprof "${SYSROOT%/}${PERFDATA_PROFILE_DIR_BOINC}" --binary "${SYSROOT%/}/${CMDOCK_EXE}" \
+				--output "${PERFDATA_PROFILE_BOINC}" || die "perfdata-mkprof failed"
+		# copy prof for access later in the build
+		PERFDATA_PROFILE="${T}/perfdata.prof"
+		mv --no-target-directory "${PERFDATA_PROFILE_BOINC}" "${PERFDATA_PROFILE}"
+	fi
 }
 
 src_prepare() {
@@ -107,6 +146,22 @@ src_configure() {
 		tc-is-clang && PGO_FLAGS_DEFAULT="-fno-profile-sample-accurate" || PGO_FLAGS_DEFAULT="-fprofile-partial-training"
 		export CFLAGS="${PGO_FLAGS_DEFAULT} ${CFLAGS}"
 		export CXXFLAGS="${PGO_FLAGS_DEFAULT} ${CXXFLAGS}"
+	fi
+
+	# perfdata is an implementation of sampling profile guided optimization
+	# see https://clang.llvm.org/docs/UsersManual.html#using-sampling-profilers
+
+	if use perfdata-gen; then
+		# the clang documentation claims -g1 (aka -gline-tables-only) is sufficient but...
+		# this level gives warnings about inconsistent dwarf info in 22.86%(72/315) of functions
+		tc-is-clang && append-flags '-g2' || append-flags '-g1'
+	fi
+
+	if use perfdata-use; then
+		# clang flag has more specific name -fprofile-sample-use but accepts -fauto-profile for gcc compat
+		append-flags "-fauto-profile=\"${PERFDATA_PROFILE}\""
+		# todo: does this help or hurt? on by default?
+		tc-is-clang && append-flags "-fsample-profile-use-profi"
 	fi
 
 	use cpu_flags_x86_sse2 || append-cppflags "-DBUNDLE_NO_SSE"
@@ -154,13 +209,29 @@ src_install() {
 		doappinfo "${FILESDIR}"/app_info_${PV}.xml
 		dowrapper cmdock-l
 
-		# link cmdock executable
-		# this used to copy cmdock into the project directory...
-		# but this can cause failures after rebuilding the package and restarting boinc
-		# because the new cmdock binary might not match up with libcmdock.so
-		# could copy ${INSTALL_PREFIX} to the project directory so that each task gets a stable snapshot
-		# but this would require listing every single file in app_info.xml
-		dosym -r "${INSTALL_PREFIX}/bin/cmdock" "$(get_project_root)/cmdock-${PV}"
+		# install cmdock executable
+		if use perfdata-gen; then
+			# todo: would it make sense to use boinc-wrapper config instead of shell script?
+			CMDOCK_EXE_WRAPPER="${T}/perfdata-cmdock"
+			<<EOF cat > "${CMDOCK_EXE_WRAPPER}"
+#!/bin/sh
+source /etc/profile.env # make sure llvm tools are in path
+export PERFDATA_PROFILE_DIR="${PERFDATA_PROFILE_DIR_BOINC}"
+export PERFDATA_CONVERT_PROF=true
+exec perfdata "${CMDOCK_EXE}" "\${@}"
+EOF
+			exeinto "$(get_project_root)"
+			exeopts --owner root --group boinc
+			newexe "${CMDOCK_EXE_WRAPPER}" cmdock-${PV}
+		else
+			# link cmdock executable
+			# this used to copy cmdock into the project directory...
+			# but this can cause failures after rebuilding the package and restarting boinc
+			# because the new cmdock binary might not match up with libcmdock.so
+			# could copy ${INSTALL_PREFIX} to the project directory so that each task gets a stable snapshot
+			# but this would require listing every single file in app_info.xml
+			dosym -r "${CMDOCK_EXE}" "$(get_project_root)/cmdock-${PV}"
+		fi
 
 		# install a blank file
 		touch "${T}"/docking_out || die
