@@ -16,13 +16,14 @@ LICENSE="LGPL-3 ZLIB"
 SLOT="0/${PV}"
 KEYWORDS="~amd64"
 # todo: make openmp optional
-IUSE="apidoc boinc clang cpu_flags_x86_sse2 doc perfdata-gen perfdata-use pgo test"
-REQUIRED_USE="perfdata-use? ( clang )"
-RESTRICT="perfdata-gen? ( strip ) !test? ( test )"
+IUSE="apidoc boinc clang cpu_flags_x86_sse2 doc perfdata-instr-gen perfdata-instr-use perfdata-sample-gen perfdata-sample-use pgo test"
+# todo: theoretically gcc can do perfdata-instr
+REQUIRED_USE="perfdata-instr-gen? ( clang !pgo ) perfdata-instr-use? ( clang !pgo ) perfdata-sample-use? ( clang )"
+RESTRICT="perfdata-sample-gen? ( strip ) !test? ( test )"
 
 RDEPEND="
 	boinc? ( sci-misc/boinc-wrapper )
-	perfdata-gen? (
+	perfdata-sample-gen? (
 		app-alternatives/sh
 		>=dev-util/perfdata-0.3.1
 	)
@@ -32,8 +33,11 @@ DEPEND="
 	>=dev-cpp/indicators-2.3-r1
 	>=dev-cpp/pcg-cpp-0.98.1_p20210406-r1
 	=dev-libs/cxxopts-3.0*
-	perfdata-use? (
-		sci-biology/cmdock[boinc?,perfdata-gen]
+	perfdata-instr-use? (
+		sci-biology/cmdock[boinc?,perfdata-instr-gen]
+	)
+	perfdata-sample-use? (
+		sci-biology/cmdock[boinc?,perfdata-sample-gen]
 	)
 "
 BDEPEND_CLANG="sys-devel/clang"
@@ -49,8 +53,9 @@ BDEPEND="
 	clang? (
 		${BDEPEND_CLANG}
 		pgo? ( ${BDEPEND_CLANG_PGO} )
+		perfdata-instr-use? ( ${BDEPEND_CLANG_PGO} )
 	)
-	perfdata-use? (
+	perfdata-sample-use? (
 		dev-util/perfdata
 		boinc? (
 			acct-user/boinc
@@ -102,27 +107,39 @@ foreach_wrapper_job() {
 pkg_setup() {
 	python-any-r1_pkg_setup
 
-	if use boinc && use perfdata-use && [ "${MERGE_TYPE}" != 'binary' ] && [ -z "${PERFDATA_PROFILE}" ]; then
-		# collect perfdata created by cmdock running under boinc
-		# run as the boinc user for safety and so intermediate files are appropriately owned
-		# first need to grant access to the portage tempdir
-		local PERFDATA_BOINC_TMPDIR="$(mktemp -d)"
-		chown boinc "${PERFDATA_BOINC_TMPDIR:?}"
-		chmod o+x "${PORTAGE_BUILDDIR:?}"
-		# generate prof
-		local PERFDATA_PROFILE_BOINC="${PERFDATA_BOINC_TMPDIR:?}/perfdata.prof"
-		TMPDIR="${PERFDATA_BOINC_TMPDIR}" runuser -u boinc -- \
-			perfdata-mkprof "${SYSROOT%/}${PERFDATA_PROFILE_DIR_BOINC}" --binary "${SYSROOT%/}/${CMDOCK_EXE}" \
-				--output "${PERFDATA_PROFILE_BOINC}" || die "perfdata-mkprof failed"
-		# copy prof for access later in the build
-		PERFDATA_PROFILE="${T}/perfdata.prof"
-		mv --no-target-directory "${PERFDATA_PROFILE_BOINC}" "${PERFDATA_PROFILE}"
+	if [ "${MERGE_TYPE}" != 'binary' ] && use boinc; then
+		if perfdata-sample-use && [ -z "${PERFDATA_PROFILE_SAMPLE}" ]; then
+			# collect perfdata created by cmdock running under boinc
+			# run as the boinc user for safety and so intermediate files are appropriately owned
+			# first need to grant access to the portage tempdir
+			local PERFDATA_BOINC_TMPDIR="$(mktemp -d)"
+			chown boinc "${PERFDATA_BOINC_TMPDIR:?}"
+			chmod o+x "${PORTAGE_BUILDDIR:?}"
+			# generate prof
+			local PERFDATA_PROFILE_BOINC="${PERFDATA_BOINC_TMPDIR:?}/perfdata.prof"
+			TMPDIR="${PERFDATA_BOINC_TMPDIR}" runuser -u boinc -- \
+				perfdata-mkprof "${SYSROOT%/}${PERFDATA_PROFILE_DIR_BOINC}" --binary "${SYSROOT%/}/${CMDOCK_EXE}" \
+					--output "${PERFDATA_PROFILE_BOINC}" || die "perfdata-mkprof failed"
+			# copy prof for access later in the build
+			PERFDATA_PROFILE_SAMPLE="${T}/perfdata.prof"
+			mv --no-target-directory "${PERFDATA_PROFILE_BOINC}" "${PERFDATA_PROFILE_SAMPLE}"
+		fi
+
+		if perfdata-instr-use && [ -z "${PERFDATA_PROFILE_INSTR}" ]; then
+			PERFDATA_PROFILE_INSTR="${T}/instr.prof"
+			llvm-profdata merge --instr "${PERFDATA_PROFILE_DIR_BOINC}"/*.profraw --output="${PERFDATA_PROFILE_INSTR}" || die "llvm-profdata failed"
+		fi
 	fi
 }
 
 src_prepare() {
 	default
 	python_fix_shebang "${S}"/bin
+}
+
+prepend-flags() {
+	export CFLAGS="${@} ${CFLAGS}"
+	export CXXFLAGS="${@} ${CXXFLAGS}"
 }
 
 src_configure() {
@@ -133,7 +150,7 @@ src_configure() {
 		# continue anyway as long as the build dependencies are installed
 		# if these were runtime dependencies this would not be safe
 		for P in ${BDEPEND_CLANG}; do require_version -b "${P}"; done
-		use pgo && for P in ${BDEPEND_CLANG_PGO}; do require_version -b "${P}"; done
+		use pgo || use perfdata-instr-use && for P in ${BDEPEND_CLANG_PGO}; do require_version -b "${P}"; done
 	fi
 
 	if tc-is-gcc && tc-is-lto && ! use pgo; then
@@ -141,27 +158,33 @@ src_configure() {
 		filter-lto
 	fi
 
-	if use pgo; then
+	if use pgo || use perfdata-instr-use || use perfdata-sample-use; then
 		# do not assume all code paths are exercised during pgo training
-		tc-is-clang && PGO_FLAGS_DEFAULT="-fno-profile-sample-accurate" || PGO_FLAGS_DEFAULT="-fprofile-partial-training"
-		export CFLAGS="${PGO_FLAGS_DEFAULT} ${CFLAGS}"
-		export CXXFLAGS="${PGO_FLAGS_DEFAULT} ${CXXFLAGS}"
+		tc-is-clang && prepend-flags '-fno-profile-sample-accurate' || prepend-flags '-fprofile-partial-training'
 	fi
 
-	# perfdata is an implementation of sampling profile guided optimization
+	if use perfdata-instr-gen; then
+		append-flags "-fprofile-dir=\"${PERFDATA_PROFILE_DIR_BOINC}\""
+	fi
+
+	if use perfdata-instr-use; then
+		append-flags "-fprofile-use=\"${PERFDATA_PROFILE_INSTR}\""
+	fi
+
+	# perfdata-sample is an implementation of sampling profile guided optimization
 	# see https://clang.llvm.org/docs/UsersManual.html#using-sampling-profilers
 
-	if use perfdata-gen; then
+	if use perfdata-sample-gen; then
 		# the clang documentation claims -g1 (aka -gline-tables-only) is sufficient but...
 		# this level gives warnings about inconsistent dwarf info in 22.86%(72/315) of functions
 		tc-is-clang && append-flags '-g2' || append-flags '-g1'
 	fi
 
-	if use perfdata-use; then
+	if use perfdata-sample-use; then
 		# clang flag has more specific name -fprofile-sample-use but accepts -fauto-profile for gcc compat
-		append-flags "-fauto-profile=\"${PERFDATA_PROFILE}\""
+		append-flags "-fauto-profile=\"${PERFDATA_PROFILE_SAMPLE}\""
 		# todo: does this help or hurt? on by default?
-		tc-is-clang && append-flags "-fsample-profile-use-profi"
+		tc-is-clang && prepend-flags "-fsample-profile-use-profi"
 	fi
 
 	use cpu_flags_x86_sse2 || append-cppflags "-DBUNDLE_NO_SSE"
@@ -178,13 +201,13 @@ src_configure() {
 }
 
 src_compile() {
+	local meson_configure_args=()
+	use perfdata-instr-gen && meson_configure_args+=('-Db_pgo=generate')
+
 	if use pgo; then
 		meson configure -Db_pgo=generate "${BUILD_DIR}"
-	fi
+		meson_src_compile
 
-	meson_src_compile
-
-	if use pgo; then
 		# generate pgo profile with real project data
 		# run only for a few minutes because the full job would take many hours
 		timeout --signal=INT --preserve-status "${PGO_TIMEOUT:-10m}" \
@@ -196,9 +219,28 @@ src_compile() {
 		fi
 
 		# rebuild using the pgo profile
-		meson configure -Db_pgo=use "${BUILD_DIR}"
-		meson_src_compile
+		meson_configure_args+=('-Db_pgo=use')
 	fi
+
+	[ ${meson_configure_args[@]} ] && meson configure "${meson_configure_args[@]}" "${BUILD_DIR}"
+	meson_src_compile
+}
+
+_gen_cmdock_wrapper() {
+	echo <<EOF
+#!/bin/sh
+EOF
+
+	use perfdata-sample-gen &&
+		echo <<EOF
+export PERFDATA_PROFILE_DIR="${PERFDATA_PROFILE_DIR_BOINC}"
+source /etc/profile.env # make sure llvm tools are in path
+export PERFDATA_CONVERT_PROF=true
+EOF
+
+	echo <<EOF
+exec perfdata "${CMDOCK_EXE}" "\${@}"
+EOF
 }
 
 src_install() {
@@ -209,29 +251,12 @@ src_install() {
 		doappinfo "${FILESDIR}"/app_info_${PV}.xml
 		dowrapper cmdock-l
 
-		# install cmdock executable
-		if use perfdata-gen; then
-			# todo: would it make sense to use boinc-wrapper config instead of shell script?
-			CMDOCK_EXE_WRAPPER="${T}/perfdata-cmdock"
-			<<EOF cat > "${CMDOCK_EXE_WRAPPER}"
-#!/bin/sh
-source /etc/profile.env # make sure llvm tools are in path
-export PERFDATA_PROFILE_DIR="${PERFDATA_PROFILE_DIR_BOINC}"
-export PERFDATA_CONVERT_PROF=true
-exec perfdata "${CMDOCK_EXE}" "\${@}"
-EOF
-			exeinto "$(get_project_root)"
-			exeopts --owner root --group boinc
-			newexe "${CMDOCK_EXE_WRAPPER}" cmdock-${PV}
-		else
-			# link cmdock executable
-			# this used to copy cmdock into the project directory...
-			# but this can cause failures after rebuilding the package and restarting boinc
-			# because the new cmdock binary might not match up with libcmdock.so
-			# could copy ${INSTALL_PREFIX} to the project directory so that each task gets a stable snapshot
-			# but this would require listing every single file in app_info.xml
-			dosym -r "${CMDOCK_EXE}" "$(get_project_root)/cmdock-${PV}"
-		fi
+		# install cmdock wrapper script
+		CMDOCK_EXE_WRAPPER="${T}/perfdata-cmdock"
+		_gen_cmdock_wrapper > "${CMDOCK_EXE_WRAPPER}"
+		exeinto "$(get_project_root)"
+		exeopts --owner root --group boinc
+		newexe "${CMDOCK_EXE_WRAPPER}" cmdock-${PV}
 
 		# install a blank file
 		touch "${T}"/docking_out || die
