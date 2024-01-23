@@ -108,7 +108,7 @@ pkg_setup() {
 	python-any-r1_pkg_setup
 
 	if [ "${MERGE_TYPE}" != 'binary' ] && use boinc; then
-		if perfdata-sample-use && [ -z "${PERFDATA_PROFILE_SAMPLE}" ]; then
+		if use perfdata-sample-use && [ -z "${PERFDATA_PROFILE_SAMPLE}" ]; then
 			# collect perfdata created by cmdock running under boinc
 			# run as the boinc user for safety and so intermediate files are appropriately owned
 			# first need to grant access to the portage tempdir
@@ -125,7 +125,7 @@ pkg_setup() {
 			mv --no-target-directory "${PERFDATA_PROFILE_BOINC}" "${PERFDATA_PROFILE_SAMPLE}"
 		fi
 
-		if perfdata-instr-use && [ -z "${PERFDATA_PROFILE_INSTR}" ]; then
+		if use perfdata-instr-use && [ -z "${PERFDATA_PROFILE_INSTR}" ]; then
 			PERFDATA_PROFILE_INSTR="${T}/instr.prof"
 			llvm-profdata merge --instr "${PERFDATA_PROFILE_DIR_BOINC}"/*.profraw --output="${PERFDATA_PROFILE_INSTR}" || die "llvm-profdata failed"
 		fi
