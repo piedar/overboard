@@ -227,19 +227,21 @@ src_compile() {
 }
 
 _gen_cmdock_wrapper() {
-	echo <<EOF
+	cat <<EOF
 #!/bin/sh
 EOF
 
 	use perfdata-sample-gen &&
-		echo <<EOF
+		cat <<EOF
 export PERFDATA_PROFILE_DIR="${PERFDATA_PROFILE_DIR_BOINC}"
 source /etc/profile.env # make sure llvm tools are in path
 export PERFDATA_CONVERT_PROF=true
+exec perfdata "${CMDOCK_EXE}" "\${@}"
 EOF
 
-	echo <<EOF
-exec perfdata "${CMDOCK_EXE}" "\${@}"
+	! use perfdata-sample-gen &&
+		cat <<EOF
+exec "${CMDOCK_EXE}" "\${@}"
 EOF
 }
 
