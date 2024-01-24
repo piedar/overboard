@@ -1,0 +1,37 @@
+From 399bc565f9a38c70826c20e900b51f003dcd524c Mon Sep 17 00:00:00 2001
+From: Benn Snyder <benn.snyder@gmail.com>
+Date: Tue, 23 Jan 2024 22:57:32 -0500
+Subject: [PATCH] fix: exit gracefully on SIGTERM
+
+---
+ src/exe/cmdock.cxx | 1 +
+ src/exe/cmzip.cxx  | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/src/exe/cmdock.cxx b/src/exe/cmdock.cxx
+index 86bbff1..eca4563 100644
+--- a/src/exe/cmdock.cxx
++++ b/src/exe/cmdock.cxx
+@@ -83,6 +83,7 @@ void printHelpFooter() {
+ int main(const int argc, const char *argv[]) {
+   // Handle premature termination
+   signal (SIGINT, terminator);
++  signal (SIGTERM, terminator);
+   
+   // Parse the command for later use
+   std::string sCommand;
+diff --git a/src/exe/cmzip.cxx b/src/exe/cmzip.cxx
+index 043d7be..89a37c8 100644
+--- a/src/exe/cmzip.cxx
++++ b/src/exe/cmzip.cxx
+@@ -507,6 +507,7 @@ void rescue(cxxopts::ParseResult result){
+ int main(const int argc, const char *argv[]) {
+   // Handle premature termination
+   signal (SIGINT, terminator);
++  signal (SIGTERM, terminator);
+ 
+   std::cout.setf(std::ios_base::left, std::ios_base::adjustfield);
+ 
+-- 
+2.43.0
+
