@@ -51,7 +51,7 @@ RDEPEND="
 	boinc? ( sci-misc/boinc-wrapper )
 	perfdata-sample-gen? (
 		app-alternatives/sh
-		>=dev-util/perfdata-0.3.1
+		>=dev-util/perfdata-0.6.0
 	)
 "
 DEPEND="
@@ -82,7 +82,7 @@ BDEPEND="
 		perfdata-instr-use? ( ${BDEPEND_CLANG_PGO} )
 	)
 	perfdata-sample-use? (
-		dev-util/perfdata
+		>=dev-util/perfdata-0.6.0
 		boinc? (
 			acct-user/boinc
 			sys-apps/coreutils
@@ -118,6 +118,7 @@ is to attach it to SiDock@home BOINC project."
 
 readonly INSTALL_PREFIX="${EPREFIX}/opt/${P}"
 readonly CMDOCK_EXE="${INSTALL_PREFIX}/bin/cmdock"
+readonly CMDOCK_LIB="${INSTALL_PREFIX}/lib/libcmdock.so"
 : "${PERFDATA_PROFILE_DIR_BOINC:=${EPREFIX%/}$(get_boincdir)/.cache/perfdata/cmdock}"
 
 python_check_deps() {
@@ -145,7 +146,9 @@ pkg_setup() {
 			# generate prof
 			local PERFDATA_PROFILE_BOINC="${PERFDATA_BOINC_TMPDIR:?}/perfdata.prof"
 			TMPDIR="${PERFDATA_BOINC_TMPDIR}" runuser -u boinc -- \
-				perfdata-mkprof "${SYSROOT%/}/${PERFDATA_PROFILE_DIR_BOINC}" --binary "${SYSROOT%/}/${CMDOCK_EXE}" \
+				perfdata-mkprof "${SYSROOT%/}/${PERFDATA_PROFILE_DIR_BOINC}" \
+					--binary "${SYSROOT%/}/${CMDOCK_EXE}" \
+					--binary "${SYSROOT%/}/${CMDOCK_LIB}" \
 					--output "${PERFDATA_PROFILE_BOINC}" || die "perfdata-mkprof failed"
 			# copy prof for access later in the build
 			PERFDATA_PROFILE_SAMPLE="${T}/perfdata.prof"
@@ -280,7 +283,7 @@ EOF
 
 	use perfdata-sample-gen && cat <<EOF
 export PERFDATA_CONVERT_PROF=true
-exec perfdata "${CMDOCK_EXE}" "\${@}"
+exec perfdata --binary "${CMDOCK_EXE}" --binary "${CMDOCK_LIB}" "${CMDOCK_EXE}" "\${@}"
 EOF
 
 	! use perfdata-sample-gen &&
