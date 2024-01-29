@@ -51,7 +51,7 @@ RDEPEND="
 	boinc? ( sci-misc/boinc-wrapper )
 	perfdata-sample-gen? (
 		app-alternatives/sh
-		>=dev-util/perfdata-0.6.0
+		=dev-util/perfdata-0.7*
 	)
 "
 DEPEND="
@@ -282,8 +282,7 @@ export LLVM_PROFILE_FILE="\${PERFDATA_PROFILE_DIR_BOINC}/instr-%8m.profraw"
 EOF
 
 	use perfdata-sample-gen && cat <<EOF
-export PERFDATA_CONVERT_PROF=true
-exec perfdata --binary "${CMDOCK_EXE}" --binary "${CMDOCK_LIB}" "${CMDOCK_EXE}" "\${@}"
+exec perfdata --format prof --binary "${CMDOCK_EXE}" --binary "${CMDOCK_LIB}" "${CMDOCK_EXE}" "\${@}"
 EOF
 
 	! use perfdata-sample-gen &&
@@ -312,6 +311,11 @@ src_install() {
 		insinto "$(get_project_root)"
 		insopts --owner root --group boinc
 		doins "${T}"/docking_out
+
+		if use perfdata-sample-gen; then
+			insinto "/lib/systemd/system/boinc-client.service.d/"
+			doins "${FILESDIR}/zz-boinc-client-perfdata.conf"
+		fi
 	fi
 }
 
