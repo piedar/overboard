@@ -18,6 +18,7 @@ KEYWORDS="amd64"
 RDEPEND="
   app-alternatives/awk
   app-shells/bash
+  =dev-lang/python-3*
   dev-util/perf
   sys-apps/coreutils
   sys-apps/findutils
