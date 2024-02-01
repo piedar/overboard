@@ -21,7 +21,7 @@
 	# requires special CPU features for branch sampling
 	# pgo or instr builds can be sampled but not both applied to a build
 	# can be repeated indefinitely, as any build with debug symbols can be sampled
-	# adds about 25% runtime sample conversion overhead (todo: reduce)
+	# adds about 10% runtime sample conversion overhead (todo: reduce)
 #
 
 EAPI=8
@@ -63,7 +63,7 @@ DEPEND="
 		boinc? ( sci-biology/cmdock[boinc?,clang=] )
 	)
 	perfdata-sample-use? (
-		sci-biology/cmdock[boinc?,perfdata-sample-gen]
+		boinc? ( sci-biology/cmdock[boinc?] )
 	)
 "
 BDEPEND_CLANG="sys-devel/clang"
@@ -227,6 +227,8 @@ src_configure() {
 	if use perfdata-sample-use; then
 		# clang flag has more specific name -fprofile-sample-use but accepts -fauto-profile for gcc compat
 		append-flags "-fauto-profile=\"${PERFDATA_PROFILE_SAMPLE}\""
+		# probes must also be used when consuming the sample, so that llvm can verify checksums and probe mappings
+		tc-is-clang && append-flags '-fpseudo-probe-for-profiling'
 		# todo: does this help or hurt? on by default?
 		tc-is-clang && prepend-flags "-fsample-profile-use-profi"
 	fi
