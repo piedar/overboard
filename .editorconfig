@@ -10,3 +10,6 @@ indent_size = 2
 
 [cmdock-*.ebuild]
 indent_style = tab
+
+[gridcoin-*.ebuild]
+indent_style = tab
