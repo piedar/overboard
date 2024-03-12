@@ -15,6 +15,8 @@ KEYWORDS="amd64"
 # gcc not supported because autofdo is a mess compared to llvm-profgen
 # todo: find a way to make it work with gcc
 
+# todo: make dev-util/perf dependency optional
+
 RDEPEND="
   app-alternatives/awk
   app-shells/bash
@@ -24,8 +26,6 @@ RDEPEND="
   sys-apps/findutils
   sys-devel/llvm
 "
-
-# todo: detect and ewarn about unsupported CPUs
 
 src_install() {
   dobin "perf2prof"
