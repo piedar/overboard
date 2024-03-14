@@ -14,8 +14,7 @@ SRC_URI="${GH_REPO}/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz"
 LICENSE="MIT"
 SLOT="0"
 # todo: arm
-# todo: ~amd64 at least
-KEYWORDS=""
+KEYWORDS="~amd64"
 
 IUSE="+boinc daemon dbus +hardened pie qrcode qt5 systemd test upnp utils"
 IUSE+=" +asm cpu_flags_x86_avx2 cpu_flags_x86_sha cpu_flags_x86_sse4_1"
@@ -110,11 +109,12 @@ src_configure() {
 
 src_install() {
 	cmake_src_install
+	# todo: consider using this upstream gridcoinresearchd.service
+	rm -f "${D}/lib/systemd/system/gridcoinresearchd.service"
 	if use daemon ; then
 		newman doc/gridcoinresearchd.1 gridcoinresearchd.1
 		newinitd "${FILESDIR}"/gridcoinresearchd.init gridcoinresearchd
 		if use systemd ; then
-			# todo: consider using new upstream gridcoinresearchd.service
 			systemd_dounit "${FILESDIR}"/gridcoinresearchd.service
 			if use hardened ; then
 				insinto "/usr/lib/systemd/system/gridcoinresearchd.service.d/"
