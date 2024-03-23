@@ -1,8 +1,9 @@
-# Copyright 1999-2022 Gentoo Foundation
+# Copyright 1999-2024 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
+WANT_AUTCONF="2.69"
 inherit autotools
 
 DESCRIPTION="a curses-based terminal BOINC client manager"
@@ -25,7 +26,7 @@ COMMON_DEPEND="
   dev-libs/expat
   sys-libs/ncurses
 "
-BDEPEND="sys-devel/autoconf"
+BDEPEND=""
 DEPEND="${COMMON_DEPEND}"
 RDEPEND="${COMMON_DEPEND}"
 
