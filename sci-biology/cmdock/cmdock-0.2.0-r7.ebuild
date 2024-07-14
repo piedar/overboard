@@ -205,7 +205,7 @@ src_configure() {
 	fi
 
 	use pgo || use perfdata-instr-gen || use perfdata-instr-use &&
-		tc-is-gcc && append-flags "-fprofile-prefix-path=\"${S}\""
+		tc-is-gcc && append-flags "-fprofile-prefix-path=${S}"
 
 	if use pgo || use perfdata-instr-use || use perfdata-sample-use; then
 		# do not assume all code paths are exercised during pgo training
@@ -213,7 +213,7 @@ src_configure() {
 	fi
 
 	if use perfdata-instr-use; then
-		append-flags "-fprofile-use=\"${PERFDATA_PROFILE_INSTR}\""
+		append-flags "-fprofile-use=${PERFDATA_PROFILE_INSTR}"
 	fi
 
 	if use perfdata-sample-gen; then
@@ -226,7 +226,7 @@ src_configure() {
 
 	if use perfdata-sample-use; then
 		# clang flag has more specific name -fprofile-sample-use but accepts -fauto-profile for gcc compat
-		append-flags "-fauto-profile=\"${PERFDATA_PROFILE_SAMPLE}\""
+		append-flags "-fauto-profile=${PERFDATA_PROFILE_SAMPLE}"
 		# probes must also be used when consuming the sample, so that llvm can verify checksums and probe mappings
 		tc-is-clang && append-flags '-fpseudo-probe-for-profiling'
 		# todo: does this help or hurt? on by default?
