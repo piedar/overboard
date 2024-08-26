@@ -27,7 +27,7 @@
 EAPI=8
 
 PYTHON_COMPAT=( python3_{11..12} )
-BOINC_APP_OPTIONAL="true"
+BOINC_APP_OPTIONAL=1
 inherit boinc-app flag-o-matic meson optfeature python-any-r1 toolchain-funcs toolchain-override
 
 DESCRIPTION="Program for docking ligands to proteins and nucleic acids"
@@ -39,7 +39,7 @@ LICENSE="LGPL-3 ZLIB"
 SLOT="0/${PV}"
 KEYWORDS="~amd64"
 # todo: make openmp optional
-IUSE="apidoc boinc clang cpu_flags_x86_sse2 doc perfdata-instr-gen perfdata-instr-use perfdata-sample-gen perfdata-sample-use pgo test"
+IUSE="apidoc clang cpu_flags_x86_sse2 doc perfdata-instr-gen perfdata-instr-use perfdata-sample-gen perfdata-sample-use pgo test"
 REQUIRED_USE="
 	perfdata-instr-gen? ( clang !perfdata-instr-use !pgo )
 	perfdata-instr-use? ( clang !perfdata-instr-gen !perfdata-sample-use !pgo )
@@ -48,7 +48,6 @@ REQUIRED_USE="
 RESTRICT="perfdata-sample-gen? ( strip ) !test? ( test )"
 
 RDEPEND="
-	boinc? ( sci-misc/boinc-wrapper )
 	perfdata-sample-gen? (
 		app-alternatives/sh
 		=dev-util/perfdata-0.7*
@@ -117,9 +116,11 @@ BOINC_APP_HELPTEXT=\
 is to attach it to SiDock@home BOINC project."
 
 readonly INSTALL_PREFIX="${EPREFIX}/opt/${P}"
-readonly CMDOCK_EXE="${INSTALL_PREFIX}/bin/cmdock"
-readonly CMDOCK_LIB="${INSTALL_PREFIX}/lib/libcmdock.so"
+readonly CMDOCK_EXE="${INSTALL_PREFIX:?}/bin/cmdock"
+readonly CMDOCK_LIB="${INSTALL_PREFIX:?}/lib/libcmdock.so"
 : "${PERFDATA_PROFILE_DIR_BOINC:=${EPREFIX%/}$(get_boincdir)/.cache/perfdata/cmdock}"
+
+boinc-app_add_deps --wrapper
 
 python_check_deps() {
 	use doc || return 0
@@ -129,7 +130,7 @@ python_check_deps() {
 }
 
 foreach_wrapper_job() {
-	sed -e "s:@PREFIX@:${INSTALL_PREFIX}:g" -i "${1}" || die
+	sed -e "s:@PREFIX@:${INSTALL_PREFIX:?}:g" -i "${1}" || die
 }
 
 pkg_setup() {
@@ -237,7 +238,7 @@ src_configure() {
 
 	# very weird directory layout
 	local emesonargs=(
-		--prefix="${INSTALL_PREFIX}"
+		--prefix="${INSTALL_PREFIX:?}"
 		$(meson_use apidoc)
 		$(meson_use doc)
 		$(meson_use test tests)
@@ -295,24 +296,24 @@ EOF
 
 src_install() {
 	meson_src_install
-	python_optimize "${D}${INSTALL_PREFIX}"/bin
+	python_optimize "${D}${INSTALL_PREFIX:?}"/bin
 
 	if use boinc; then
-		doappinfo "${FILESDIR}"/app_info_${PV}.xml
-		dowrapper cmdock-l
+		boinc_install_appinfo "${FILESDIR}/app_info_${PV}.xml"
+		boinc_install_wrapper cmdock-l_wrapper \
+			"${FILESDIR}/cmdock-l_job_${PV}.xml" "cmdock-l_job.xml"
 
 		# install cmdock wrapper script
 		CMDOCK_EXE_WRAPPER="${T}/perfdata-cmdock"
 		_gen_cmdock_wrapper > "${CMDOCK_EXE_WRAPPER}"
 		exeinto "$(get_project_root)"
 		exeopts --owner root --group boinc
-		newexe "${CMDOCK_EXE_WRAPPER}" cmdock-${PV}
+		newexe "${CMDOCK_EXE_WRAPPER}" cmdock
 
 		# install a blank file
-		touch "${T}"/docking_out || die
 		insinto "$(get_project_root)"
-		insopts --owner root --group boinc
-		doins "${T}"/docking_out
+		insopts -m 0644 --owner root --group boinc
+		newins - docking_out
 
 		if use perfdata-sample-gen; then
 			insinto "/lib/systemd/system/boinc-client.service.d/"
