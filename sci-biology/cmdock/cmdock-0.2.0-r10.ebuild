@@ -9,17 +9,11 @@
 	# trains on static data from an actual cmdock boinc job
 	# env PGO_TIMEOUT=2h to change training time limit
 
-	# perfdata-instr implements live instrumented PGO
-	# alternative to USE=pgo but running longer and producing results
-	# clang only - gcc instrumentation is too slow and finicky
-	# cannot gen and use with the same build
-	# adds at least 15% runtime instrumentation overhead
-
 	# perfdata-sample implements live sampling PGO
 	# see https://clang.llvm.org/docs/UsersManual.html#using-sampling-profilers
 	# clang only - gcc tooling is not really usable
-	# requires special CPU features for branch sampling
-	# pgo or instr builds can be sampled but not both applied to a build
+	# may require special CPU features for branch sampling
+	# traditional pgo builds can be sampled but not both applied to the same build
 	# can be repeated indefinitely, as any build with debug symbols can be sampled
 	# adds about 10% runtime sample conversion overhead (todo: reduce)
 #
@@ -39,11 +33,9 @@ LICENSE="LGPL-3 ZLIB"
 SLOT="0/${PV}"
 KEYWORDS="~amd64"
 # todo: make openmp optional
-IUSE="apidoc clang cpu_flags_x86_sse2 doc perfdata-instr-gen perfdata-instr-use perfdata-sample-gen perfdata-sample-use pgo test"
+IUSE="apidoc clang cpu_flags_x86_sse2 doc perfdata-sample-gen perfdata-sample-use pgo test"
 REQUIRED_USE="
-	perfdata-instr-gen? ( clang !perfdata-instr-use !pgo )
-	perfdata-instr-use? ( clang !perfdata-instr-gen !perfdata-sample-use !pgo )
-	perfdata-sample-use? ( clang !perfdata-instr-use !pgo )
+	perfdata-sample-use? ( clang !pgo )
 "
 RESTRICT="perfdata-sample-gen? ( strip ) !test? ( test )"
 
@@ -58,9 +50,6 @@ DEPEND="
 	>=dev-cpp/indicators-2.3-r1
 	>=dev-cpp/pcg-cpp-0.98.1_p20210406-r1
 	=dev-libs/cxxopts-3.0*
-	perfdata-instr-use? (
-		boinc? ( sci-biology/cmdock[boinc?,clang=] )
-	)
 	perfdata-sample-use? (
 		boinc? ( sci-biology/cmdock[boinc?] )
 	)
@@ -78,7 +67,6 @@ BDEPEND="
 	clang? (
 		${BDEPEND_CLANG}
 		pgo? ( ${BDEPEND_CLANG_PGO} )
-		perfdata-instr-use? ( ${BDEPEND_CLANG_PGO} )
 	)
 	perfdata-sample-use? (
 		>=dev-util/perfdata-0.6.0
@@ -155,23 +143,6 @@ pkg_setup() {
 			PERFDATA_PROFILE_SAMPLE="${T}/perfdata.prof"
 			mv --no-target-directory "${PERFDATA_PROFILE_BOINC}" "${PERFDATA_PROFILE_SAMPLE}"
 		fi
-
-		if use perfdata-instr-use && [ -z "${PERFDATA_PROFILE_INSTR}" ]; then
-			PERFDATA_PROFILE_INSTR="${T}/instr.profdata"
-			(
-				shopt -s nullglob
-				if use clang; then
-					llvm-profdata merge --instr \
-						"${SYSROOT%/}/${PERFDATA_PROFILE_DIR_BOINC}"/*.profdata \
-						"${SYSROOT%/}/${PERFDATA_PROFILE_DIR_BOINC}"/*.profraw \
-							--output="${PERFDATA_PROFILE_INSTR}" || die "llvm-profdata --instr failed"
-				else
-					# todo: does this actually work?
-					mkdir -p "${PERFDATA_PROFILE_INSTR}"
-					cp "${SYSROOT%/}/${PERFDATA_PROFILE_DIR_BOINC}"/*.gcda "${PERFDATA_PROFILE_INSTR}/"
-				fi
-			)
-		fi
 	fi
 }
 
@@ -193,28 +164,19 @@ src_configure() {
 		# continue anyway as long as the build dependencies are installed
 		# if these were runtime dependencies this would not be safe
 		for P in ${BDEPEND_CLANG}; do require_version -b "${P}"; done
-		use pgo || use perfdata-instr-use && for P in ${BDEPEND_CLANG_PGO}; do require_version -b "${P}"; done
+		use pgo && for P in ${BDEPEND_CLANG_PGO}; do require_version -b "${P}"; done
 	fi
 
-	if tc-is-gcc && tc-is-lto && ! use pgo && ! use perfdata-instr-use; then
+	if tc-is-gcc && tc-is-lto && ! use pgo; then
 		ewarn "filtering gcc lto because it degrades performance without pgo"
 		filter-lto
 	fi
 
-	if use perfdata-instr-gen; then
-		append-flags '-fprofile-generate'
-	fi
+	use pgo && tc-is-gcc && append-flags "-fprofile-prefix-path=${S}"
 
-	use pgo || use perfdata-instr-gen || use perfdata-instr-use &&
-		tc-is-gcc && append-flags "-fprofile-prefix-path=${S}"
-
-	if use pgo || use perfdata-instr-use || use perfdata-sample-use; then
+	if use pgo || use perfdata-sample-use; then
 		# do not assume all code paths are exercised during pgo training
 		tc-is-clang && prepend-flags '-fno-profile-sample-accurate' || prepend-flags '-fprofile-partial-training'
-	fi
-
-	if use perfdata-instr-use; then
-		append-flags "-fprofile-use=${PERFDATA_PROFILE_INSTR}"
 	fi
 
 	if use perfdata-sample-gen; then
@@ -248,7 +210,7 @@ src_configure() {
 }
 
 src_compile() {
-	if use pgo && ! use perfdata-instr-use; then
+	if use pgo; then
 		meson configure -Db_pgo=generate "${BUILD_DIR}"
 		meson_src_compile
 
@@ -272,19 +234,11 @@ src_compile() {
 _gen_cmdock_wrapper() {
 	cat <<EOF
 #!/bin/sh
-. '/etc/profile.env' # make sure llvm tools are in PATH
-export PERFDATA_PROFILE_DIR="${PERFDATA_PROFILE_DIR_BOINC}"
-EOF
-
-# todo: gcc path nonsense
-#export GCOV_PREFIX="\${PERFDATA_PROFILE_DIR}"
-#export GCOV_PREFIX_STRIP=10000000
-
-	use perfdata-instr-gen && cat <<EOF
-export LLVM_PROFILE_FILE="\${PERFDATA_PROFILE_DIR_BOINC}/instr-%8m.profraw"
 EOF
 
 	use perfdata-sample-gen && cat <<EOF
+. '/etc/profile.env' # make sure llvm tools are in PATH
+export PERFDATA_PROFILE_DIR="${PERFDATA_PROFILE_DIR_BOINC}"
 exec perfdata --format prof --binary "${CMDOCK_EXE}" --binary "${CMDOCK_LIB}" "${CMDOCK_EXE}" "\${@}"
 EOF
 
