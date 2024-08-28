@@ -42,7 +42,7 @@ RESTRICT="perfdata-sample-gen? ( strip ) !test? ( test )"
 RDEPEND="
 	perfdata-sample-gen? (
 		app-alternatives/sh
-		=dev-util/perfdata-0.7*
+		=dev-util/perfdata-0.12*
 	)
 "
 DEPEND="
@@ -239,7 +239,9 @@ EOF
 	use perfdata-sample-gen && cat <<EOF
 . '/etc/profile.env' # make sure llvm tools are in PATH
 export PERFDATA_PROFILE_DIR="${PERFDATA_PROFILE_DIR_BOINC}"
-exec perfdata --format prof --binary "${CMDOCK_EXE}" --binary "${CMDOCK_LIB}" "${CMDOCK_EXE}" "\${@}"
+
+# all hot paths are in libcmdock.so so sampling from cmdock also would be a waste of time
+exec perfdata --format prof --binary "${CMDOCK_LIB}" "${CMDOCK_EXE}" "\${@}"
 EOF
 
 	! use perfdata-sample-gen &&
