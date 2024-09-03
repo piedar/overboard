@@ -12,15 +12,15 @@ LICENSE="LGPL-3"
 
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="hardened network-retry opencl thermal video_cards_radeonsi"
+IUSE="hardened network-retry opencl thermal video_cards_nvidia video_cards_radeonsi"
 
 RDEPEND="
   sci-misc/boinc[opencl=]
   >=sys-apps/systemd-252
   sys-process/nicest
-  hardened? ( opencl? ( dev-util/clinfo ) )
   opencl? (
     hardened? ( dev-util/clinfo )
+    video_cards_nvidia? ( x11-drivers/nvidia-drivers[persistenced(+)] )
     video_cards_radeonsi? ( media-libs/mesa[opencl,video_cards_radeonsi] )
   )
   thermal? ( sys-power/temp-throttle )
