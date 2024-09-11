@@ -217,11 +217,13 @@ src_compile() {
 		# generate pgo profile with real project data
 		# run only for a few minutes because the full job would take many hours
 		timeout --signal=INT --preserve-status "${PGO_TIMEOUT:-10m}" \
-			"${BUILD_DIR}/cmdock" -c -j 1 -b 1 -x -r "${FILESDIR}/pgo/target.prm" -p "${S}/data/scripts/dock.prm" \
+			"${BUILD_DIR}/cmdock" -c -j 1 -b 1 -r "${FILESDIR}/pgo/target.prm" -p "${S}/data/scripts/dock.prm" \
 			-f "${FILESDIR}/pgo/htvs.ptc" -i "${FILESDIR}/pgo/ligands.sdf" -o "${T}/pgo-docking_out"
 
 		if tc-is-clang; then
-			llvm-profdata merge --instr "${BUILD_DIR}"/*.profraw --output="${BUILD_DIR}/default.profdata" || die "llvm-profdata failed"
+			# collect profraw in ${S} from pgo run
+			# might also be profraw in ${BUILD_DIR} when USE=test but probably not worth collecting
+			llvm-profdata merge --instr "${S}"/*.profraw --output="${BUILD_DIR}/default.profdata" || die "llvm-profdata failed"
 		fi
 
 		# rebuild using the pgo profile
