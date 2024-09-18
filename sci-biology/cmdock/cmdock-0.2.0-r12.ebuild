@@ -168,8 +168,7 @@ src_configure() {
 	fi
 
 	if tc-is-gcc && tc-is-lto && ! use pgo; then
-		ewarn "filtering gcc lto because it degrades performance without pgo"
-		filter-lto
+		ewarn "gcc lto might degrade performance without pgo"
 	fi
 
 	use pgo && tc-is-gcc && append-flags "-fprofile-prefix-path=${S}"
