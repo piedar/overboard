@@ -12,8 +12,9 @@ LICENSE="LGPL-3"
 
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="hardened network-retry opencl thermal video_cards_nvidia video_cards_radeonsi"
+IUSE="hardened network-retry opencl +rosetta thermal video_cards_nvidia video_cards_radeonsi"
 
+# rosetta beta has some dynamic link dependencies
 RDEPEND="
   sci-misc/boinc[opencl=]
   >=sys-apps/systemd-252
@@ -22,6 +23,14 @@ RDEPEND="
     hardened? ( dev-util/clinfo )
     video_cards_nvidia? ( x11-drivers/nvidia-drivers[persistenced(+)] )
     video_cards_radeonsi? ( media-libs/mesa[opencl,video_cards_radeonsi] )
+  )
+  rosetta? (
+    app-arch/brotli
+    media-libs/libglvnd[X]
+    x11-libs/libxcb
+    x11-libs/libXau
+    x11-libs/libXdmcp
+    x11-libs/libX11
   )
   thermal? ( sys-power/temp-throttle )
 "
