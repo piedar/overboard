@@ -14,6 +14,10 @@ SLOT="0"
 KEYWORDS="amd64 ~x86"
 IUSE="hardened network-retry opencl +rosetta thermal video_cards_nvidia video_cards_radeonsi"
 
+SRC_URI="
+  https://github.com/BOINC/boinc/pull/5504.patch -> boinc-wrapper-sleep-pr5504.patch
+"
+
 # rosetta beta has some dynamic link dependencies
 RDEPEND="
   sci-misc/boinc[opencl=]
@@ -39,6 +43,12 @@ S="${WORKDIR}"
 
 src_install() {
   default
+
+  insinto "/etc/portage/patches/sci-misc/boinc-wrapper/"
+  # https://bugs.gentoo.org/939902
+  doins "${FILESDIR}/boinc-wrapper-sigstop.patch"
+  # https://github.com/BOINC/boinc/pull/5504
+  doins "${DISTDIR}/boinc-wrapper-sleep-pr5504.patch"
 
   systemd_dounit "${FILESDIR}/boinc-client-network-retry.service"
   if use network-retry; then
