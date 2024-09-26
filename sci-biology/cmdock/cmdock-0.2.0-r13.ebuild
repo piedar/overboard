@@ -69,11 +69,9 @@ BDEPEND="
 		pgo? ( ${BDEPEND_CLANG_PGO} )
 	)
 	perfdata-sample-use? (
-		>=dev-util/perfdata-0.6.0
 		boinc? (
-			acct-user/boinc
-			sys-apps/coreutils
-			sys-apps/util-linux
+			clang? ( ${BDEPEND_CLANG_PGO} )
+			sys-apps/findutils
 		)
 	)
 	doc? (
@@ -126,22 +124,10 @@ pkg_setup() {
 
 	if [ "${MERGE_TYPE}" != 'binary' ] && use boinc; then
 		if use perfdata-sample-use && [ -z "${PERFDATA_PROFILE_SAMPLE}" ]; then
-			# collect perfdata created by cmdock running under boinc
-			# run as the boinc user for safety and so intermediate files are appropriately owned
-			# first need to grant access to the portage tempdir
-			local PERFDATA_BOINC_TMPDIR="$(mktemp -d)"
-			chown boinc "${PERFDATA_BOINC_TMPDIR:?}"
-			chmod o+x "${PORTAGE_BUILDDIR:?}"
-			# generate prof
-			local PERFDATA_PROFILE_BOINC="${PERFDATA_BOINC_TMPDIR:?}/perfdata.prof"
-			TMPDIR="${PERFDATA_BOINC_TMPDIR}" runuser -u boinc -- \
-				perfdata-mkprof "${SYSROOT%/}/${PERFDATA_PROFILE_DIR_BOINC}" \
-					--binary "${SYSROOT%/}/${CMDOCK_EXE}" \
-					--binary "${SYSROOT%/}/${CMDOCK_LIB}" \
-					--output "${PERFDATA_PROFILE_BOINC}" || die "perfdata-mkprof failed"
-			# copy prof for access later in the build
+			# collect prof files created by cmdock running under boinc
 			PERFDATA_PROFILE_SAMPLE="${T}/perfdata.prof"
-			mv --no-target-directory "${PERFDATA_PROFILE_BOINC}" "${PERFDATA_PROFILE_SAMPLE}"
+			readarray -d '' PROF_FILES < <(find "${SYSROOT%/}/${PERFDATA_PROFILE_DIR_BOINC}" -type f -name '*.prof' -print0 | sort --unique --zero-terminated)
+			llvm-profdata merge --sample ${PROF_FILES[@]} --output="${PERFDATA_PROFILE_SAMPLE}" || die "llvm-profdata failed"
 		fi
 	fi
 }
