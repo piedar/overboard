@@ -12,8 +12,8 @@ Environment="CMDOCK_LIB=/opt/cmdock-0.2.0/lib/libcmdock.so"
 ExecStart=perfdata --wait 10 --user --format prof --path "${CMDOCK_EXE}" --binary "${CMDOCK_LIB}"
 # kill main process first and give workers a chance to finish
 KillMode=mixed
-# todo: default ok?
-#TimeoutStopSec=
+TimeoutStopSec=20m
+# todo: https://systemd.io/MEMORY_PRESSURE/
 
 # todo: somehow get priority lower than boinc-client
 Nice=19
