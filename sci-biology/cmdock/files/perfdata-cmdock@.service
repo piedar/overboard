@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: LGPL-3.0-only
+
+[Unit]
+Description=Collect perfdata from cmdock
+
+[Service]
+Type=simple
+User=%i
+# all hot paths are in libcmdock.so so sampling from cmdock also would be a waste of time
+Environment="CMDOCK_EXE=/opt/cmdock-0.2.0/bin/cmdock"
+Environment="CMDOCK_LIB=/opt/cmdock-0.2.0/lib/libcmdock.so"
+ExecStart=perfdata --wait 10 --user --format prof --path "${CMDOCK_EXE}" --binary "${CMDOCK_LIB}"
+# kill main process first and give workers a chance to finish
+KillMode=mixed
+# todo: default ok?
+#TimeoutStopSec=
+
+# todo: somehow get priority lower than boinc-client
+Nice=19
+#Slice=nicest.slice
+CPUSchedulingPolicy=idle
+IOSchedulingClass=idle
+CPUWeight=idle
+IOWeight=1
+
+# security hardening
+CapabilityBoundingSet=
+DeviceAllow=
+LockPersonality=true
+MemoryDenyWriteExecute=true
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateNetwork=true
+PrivateTmp=true
+# must be false to access /proc/$pid/exe
+PrivateUsers=false
+ProcSubset=pid
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectProc=invisible
+# cannot be strict because it needs to write results
+ProtectSystem=full
+RemoveIPC=true
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+# allow perf record
+SystemCallFilter=perf_event_open
+SystemCallErrorNumber=EPERM
+
+# todo: necessary?
+# perf_event__synthesize_bpf_events: failed to synthesize bpf images: Permission denied
+#ProtectKernelTunables=false

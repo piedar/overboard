@@ -22,7 +22,7 @@ EAPI=8
 
 PYTHON_COMPAT=( python3_{11..12} )
 BOINC_APP_OPTIONAL=1
-inherit boinc-app flag-o-matic meson optfeature python-any-r1 toolchain-funcs toolchain-override
+inherit boinc-app flag-o-matic meson optfeature python-any-r1 systemd toolchain-funcs toolchain-override
 
 DESCRIPTION="Program for docking ligands to proteins and nucleic acids"
 HOMEPAGE="https://gitlab.com/Jukic/cmdock"
@@ -42,7 +42,7 @@ RESTRICT="perfdata-sample-gen? ( strip ) !test? ( test )"
 RDEPEND="
 	perfdata-sample-gen? (
 		app-alternatives/sh
-		=dev-util/perfdata-0.12*
+		=dev-util/perfdata-0.15*
 	)
 "
 DEPEND="
@@ -235,18 +235,6 @@ src_compile() {
 _gen_cmdock_wrapper() {
 	cat <<EOF
 #!/bin/sh
-EOF
-
-	use perfdata-sample-gen && cat <<EOF
-. '/etc/profile.env' # make sure llvm tools are in PATH
-export PERFDATA_PROFILE_DIR="${PERFDATA_PROFILE_DIR_BOINC}"
-
-# all hot paths are in libcmdock.so so sampling from cmdock also would be a waste of time
-exec perfdata --format prof --binary "${CMDOCK_LIB}" "${CMDOCK_EXE}" "\${@}"
-EOF
-
-	! use perfdata-sample-gen &&
-		cat <<EOF
 exec "${CMDOCK_EXE}" "\${@}"
 EOF
 }
@@ -261,6 +249,9 @@ src_install() {
 			"${FILESDIR}/cmdock-l_job_${PV}.xml" "cmdock-l_job.xml"
 
 		# install cmdock wrapper script
+		# this could instead be a copy of the binary like guru does it, or a symlink
+		# but boinc checks the file size and complains if it changes
+		# this script allows hot swapping the binary without restarting boinc
 		CMDOCK_EXE_WRAPPER="${T}/perfdata-cmdock"
 		_gen_cmdock_wrapper > "${CMDOCK_EXE_WRAPPER}"
 		exeinto "$(get_project_root)"
@@ -275,6 +266,9 @@ src_install() {
 		if use perfdata-sample-gen; then
 			insinto "/lib/systemd/system/boinc-client.service.d/"
 			doins "${FILESDIR}/zz-boinc-client-perfdata.conf"
+
+			systemd_dounit "${FILESDIR}/perfdata-cmdock@.service"
+			systemd_enable_service "boinc-client.service" "perfdata-cmdock@.service"
 		fi
 	fi
 }
