@@ -2,12 +2,13 @@
 # Distributed under the terms of the GNU General Public License v2
 
 # notes about optimization
-	# CXXFLAGS="-O3" recommended
+	# CXXFLAGS="-march=native -O3" recommended
 	# LTO recommended with clang, but hit or miss with gcc
 
 	# USE=pgo implements traditional compile => train => recompile
 	# trains on static data from an actual cmdock boinc job
-	# env PGO_TIMEOUT=2h to change training time limit
+	# env PGO_TIMEOUT=2h to train longer but it does not help much
+	# training data needs updated whenever sidock switches target disease
 
 	# perfdata-sample implements live sampling PGO
 	# see https://clang.llvm.org/docs/UsersManual.html#using-sampling-profilers
@@ -15,7 +16,14 @@
 	# may require special CPU features for branch sampling
 	# traditional pgo builds can be sampled but not both applied to the same build
 	# can be repeated indefinitely, as any build with debug symbols can be sampled
-	# adds about 10% runtime sample conversion overhead (todo: reduce)
+	# adds about 20% runtime sample conversion overhead (todo: reduce)
+	# no noticeable overhead unless perfdata is actually sampling
+	# todo: might get better results when gathering and applying samples on same CPU
+
+	# top performers from tests on bdver2 - rough comparison with official project binaries
+	# 1. 11% faster - gcc-13.3.1   USE="-clang pgo" CXXFLAGS="-march=native -O3 -flto -fno-profile-partial-training"
+	# 2. 06% faster - gcc-13.3.1   USE="-clang -pgo" CXXFLAGS="-march=native -O3"
+	# 3. 02% faster - clang-18.1.8 USE="clang perfdata-sample-use" CXXFLAGS="-march=native -O3 -flto -fno-profile-sample-accurate -fno-sample-profile-use-profi" with samples from skylake
 #
 
 EAPI=8
@@ -161,7 +169,9 @@ src_configure() {
 
 	if use pgo || use perfdata-sample-use; then
 		# do not assume all code paths are exercised during pgo training
-		tc-is-clang && prepend-flags '-fno-profile-sample-accurate' || prepend-flags '-fprofile-partial-training'
+		# without this flag, unused paths are optimized for size rather than speed
+		# gcc has similar -fprofile-partial-training but it hurts slightly rather than help slightly
+		tc-is-clang && prepend-flags '-fno-profile-sample-accurate'
 	fi
 
 	if use perfdata-sample-gen; then

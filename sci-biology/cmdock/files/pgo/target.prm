@@ -1,18 +1,34 @@
 RBT_PARAMETER_FILE_V1.00
-TITLE rdrp_v_2
-#corona vs on RdRp
-#htvs opt _ off
-#100 runs b 1
+TITLE ebola GP
+#7ssq  
+#chain A, B
+#clean mae
+#no waters
+#binding site 2
 
 RECEPTOR_FILE target.mol2
-#flex 6 A!
-RECEPTOR_FLEX 6.0
+#no flex !
 
+#------------------------------
+##cavitiy iz ref lokacije
+#SECTION MAPPER
+#   SITE_MAPPER RbtSphereSiteMapper
+##2099	   O	233.426	221.707	130.192	O.2	134	LEU490	0.000	
+#   CENTER (233.426,221.707,130.192)
+#   RADIUS 18.0
+#   SMALL_SPHERE 1.5
+#   LARGE_SPHERE 12.0
+#   MAX_CAVITIES 1
+#END_SECTION
+##end cav def###########
+#
+#------------------------------
 #------------------------------
 #cavitiy iz ref liganda
 SECTION MAPPER
    SITE_MAPPER RbtLigandSiteMapper
-   RADIUS 12.0
+   REF_MOL reference-ligand.sdf
+   RADIUS 9.0
    SMALL_SPHERE 1.0
    MIN_VOLUME 100
    MAX_CAVITIES 1
@@ -22,6 +38,7 @@ END_SECTION
 #end cav def###########
 
 #------------------------------
+
 #da ne uide ligand
 #restraint
 SECTION CAVITY
@@ -31,8 +48,6 @@ END_SECTION
 #end restraint
 
 #------------------------------
-#no waters
-#no restrictors
-#prep_org RdRp - on new RdRps
-# good luck to us all !
+#no waters atm
+
 #end prm file definition
