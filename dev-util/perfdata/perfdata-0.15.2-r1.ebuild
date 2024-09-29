@@ -32,4 +32,7 @@ src_install() {
   dobin "perfdata"
   dobin "perfdata-cleanup"
   dobin "perfdata-mkprof"
+
+  insinto "/etc/portage/"
+  doins -r "patches"
 }
