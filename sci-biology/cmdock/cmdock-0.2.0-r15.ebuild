@@ -18,12 +18,17 @@
 	# can be repeated indefinitely, as any build with debug symbols can be sampled
 	# adds about 20% runtime sample conversion overhead (todo: reduce)
 	# no noticeable overhead unless perfdata is actually sampling
-	# todo: might get better results when gathering and applying samples on same CPU
+	# better results when gen and use on same CPU arch
 
-	# top performers from tests on bdver2 - rough comparison with official project binaries
-	# 1. 11% faster - gcc-13.3.1   USE="-clang pgo" CXXFLAGS="-march=native -O3 -flto -fno-profile-partial-training"
-	# 2. 06% faster - gcc-13.3.1   USE="-clang -pgo" CXXFLAGS="-march=native -O3"
-	# 3. 02% faster - clang-18.1.8 USE="clang perfdata-sample-use" CXXFLAGS="-march=native -O3 -flto -fno-profile-sample-accurate -fno-sample-profile-use-profi" with samples from skylake
+	# rough comparisons with official project binaries
+	# top performers on bdver2
+	# 1. 11% faster -		gcc-13.3.1 USE="pgo" CXXFLAGS="-march=native -O3 -flto -fno-profile-partial-training"
+	# 2. 06% faster -		gcc-13.3.1 USE="-pgo" CXXFLAGS="-march=native -O3"
+	# 3. 02% faster -	clang-18.1.8 USE="perfdata-sample-use" CXXFLAGS="-march=native -O3 -flto -fno-profile-sample-accurate -fno-sample-profile-use-profi" with samples from skylake
+	# top performers on skylake
+	# 1. 16% faster -   gcc-13.3.1 USE="pgo" CXXFLAGS="-march=native -O3 -flto"
+	# 2. 14% faster - clang-18.8.1 USE="-pgo perfdata-sample-use" CXXFLAGS="-march=native -O3 -flto -fno-profile-sample-accurate" with samples from skylake
+	# 3. 12% faster - clang-18.8.1 USE="pgo" CXXFLAGS="-march=native -O3 -flto"
 #
 
 EAPI=8
