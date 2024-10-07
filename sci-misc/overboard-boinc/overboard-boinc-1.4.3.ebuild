@@ -45,8 +45,6 @@ src_install() {
   default
 
   insinto "/etc/portage/patches/sci-misc/boinc-wrapper/"
-  # https://bugs.gentoo.org/939902
-  doins "${FILESDIR}/boinc-wrapper-sigstop.patch"
   # https://github.com/BOINC/boinc/pull/5504
   doins "${DISTDIR}/boinc-wrapper-sleep-pr5504.patch"
 
