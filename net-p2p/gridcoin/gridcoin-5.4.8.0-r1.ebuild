@@ -47,7 +47,7 @@ COMMON_DEPEND="
 		qrcode? ( media-gfx/qrencode )
 	)
 	system-bdb? ( sys-libs/db:5.3[cxx] )
-	system-libsecp256k1? ( >=dev-libs/libsecp256k1-0.2.0 )
+	system-libsecp256k1? ( >=dev-libs/libsecp256k1-0.2.0:=[recovery(+)] )
 	system-univalue? ( dev-libs/univalue )
 	system-xxd? ( test? ( dev-util/xxd ) )
 	upnp? ( >=net-libs/miniupnpc-1.9.0 )
