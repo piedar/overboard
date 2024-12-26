@@ -1,10 +1,8 @@
 RBT_PARAMETER_FILE_V1.00
-TITLE ebola GP
-#7ssq  
-#chain A, B
-#clean mae
-#no waters
-#binding site 2
+TITLE SARS-CoV-2_delta_RBD
+#7V7Q SARS-CoV-2 delta variant RBD up  
+#clean Yasara
+#2 sphere method !!! and ref ACE2 helix
 
 RECEPTOR_FILE target.mol2
 #no flex !
@@ -27,8 +25,8 @@ RECEPTOR_FILE target.mol2
 #cavitiy iz ref liganda
 SECTION MAPPER
    SITE_MAPPER RbtLigandSiteMapper
-   REF_MOL reference-ligand.sdf
-   RADIUS 9.0
+   REF_MOL ace_hel.sdf
+   RADIUS 7.0
    SMALL_SPHERE 1.0
    MIN_VOLUME 100
    MAX_CAVITIES 1
@@ -48,6 +46,6 @@ END_SECTION
 #end restraint
 
 #------------------------------
-#no waters atm
+#no waters
 
 #end prm file definition
