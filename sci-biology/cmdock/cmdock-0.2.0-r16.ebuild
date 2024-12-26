@@ -245,9 +245,9 @@ src_install() {
 	python_optimize "${D}${INSTALL_PREFIX:?}"/bin
 
 	if use boinc; then
-		boinc_install_appinfo "${FILESDIR}/app_info_${PV}.xml"
-		boinc_install_wrapper cmdock-l_wrapper \
-			"${FILESDIR}/cmdock-l_job_${PV}.xml" "cmdock-l_job.xml"
+		boinc_install_appinfo "${FILESDIR}/app_info.xml"
+		boinc_install_wrapper cmdock_wrapper \
+			"${FILESDIR}/cmdock_job.xml" "cmdock_job.xml"
 
 		# install cmdock wrapper script
 		# this could instead be a copy of the binary like guru does it, or a symlink
