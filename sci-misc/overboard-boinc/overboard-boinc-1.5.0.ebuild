@@ -1,4 +1,4 @@
-# Copyright 1999-2023 Gentoo Foundation
+# Copyright 1999-2025 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -12,7 +12,7 @@ LICENSE="LGPL-3"
 
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="hardened network-retry opencl +rosetta thermal video_cards_nvidia video_cards_radeonsi"
+IUSE="hardened network-retry opencl +rosetta thermal video_cards_intel video_cards_nouveau video_cards_nvidia video_cards_radeonsi"
 
 SRC_URI="
   https://github.com/BOINC/boinc/pull/5504.patch -> boinc-wrapper-sleep-pr5504.patch
@@ -25,6 +25,8 @@ RDEPEND="
   sys-process/nicest
   opencl? (
     hardened? ( dev-util/clinfo )
+    video_cards_intel? ( media-libs/mesa[opencl,video_cards_intel] )
+    video_cards_nouveau? ( media-libs/mesa[opencl,video_cards_nouveau] )
     video_cards_nvidia? ( x11-drivers/nvidia-drivers[persistenced(+)] )
     video_cards_radeonsi? ( media-libs/mesa[opencl,video_cards_radeonsi] )
   )
@@ -65,8 +67,10 @@ src_install() {
     fi
   fi
 
-  if use opencl && use video_cards_radeonsi; then
-    doins "${FILESDIR}/overboard-opencl-radeonsi.conf"
+  if use opencl; then
+    use video_cards_intel && doins "${FILESDIR}/overboard-opencl-intel.conf"
+    use video_cards_nouveau && doins "${FILESDIR}/overboard-opencl-nouveau.conf"
+    use video_cards_radeonsi && doins "${FILESDIR}/overboard-opencl-radeonsi.conf"
   fi
 
   if use thermal; then
