@@ -68,9 +68,22 @@ src_install() {
   fi
 
   if use opencl; then
-    use video_cards_intel && doins "${FILESDIR}/overboard-opencl-intel.conf"
-    use video_cards_nouveau && doins "${FILESDIR}/overboard-opencl-nouveau.conf"
-    use video_cards_radeonsi && doins "${FILESDIR}/overboard-opencl-radeonsi.conf"
+    RUSTICL_ENABLE=''
+    use video_cards_intel && RUSTICL_ENABLE+='iris,'
+    use video_cards_nouveau && RUSTICL_ENABLE+='nouveau,'
+    use video_cards_radeonsi && RUSTICL_ENABLE+='radeonsi,'
+
+    if [ -n "${RUSTICL_ENABLE}" ]; then
+      OPENCL_CONF="${T}/overboard-opencl.conf"
+      cat >"${OPENCL_CONF}" <<EOF
+# SPDX-License-Identifier: LGPL-3.0-only
+# enable rusticl
+
+[Service]
+Environment="RUSTICL_ENABLE=${RUSTICL_ENABLE}"
+EOF
+    doins "${OPENCL_CONF}"
+    fi
   fi
 
   if use thermal; then
