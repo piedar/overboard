@@ -20,10 +20,11 @@ SRC_URI="
 
 # rosetta beta has some dynamic link dependencies
 RDEPEND="
-  sci-misc/boinc[opencl=]
+  sci-misc/boinc[opencl(+)?]
   >=sys-apps/systemd-252
   sys-process/nicest
   opencl? (
+    virtual/opencl
     hardened? ( dev-util/clinfo )
     video_cards_intel? ( media-libs/mesa[opencl,video_cards_intel] )
     video_cards_nouveau? ( media-libs/mesa[opencl,video_cards_nouveau] )
