@@ -47,7 +47,7 @@ S="${WORKDIR}"
 src_install() {
   default
 
-  insinto "/etc/portage/patches/sci-misc/boinc-wrapper/"
+  insinto "/etc/portage/patches/sci-misc/boinc-wrapper-26018/"
   # https://github.com/BOINC/boinc/pull/5504
   doins "${DISTDIR}/boinc-wrapper-sleep-pr5504.patch"
 
