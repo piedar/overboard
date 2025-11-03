@@ -74,7 +74,7 @@ BDEPEND_CLANG_PGO="
 "
 BDEPEND="
 	apidoc? (
-		app-doc/doxygen
+		app-text/doxygen
 		dev-texlive/texlive-fontutils
 	)
 	clang? (
