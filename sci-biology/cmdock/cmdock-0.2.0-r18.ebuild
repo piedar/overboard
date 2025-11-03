@@ -198,6 +198,9 @@ src_configure() {
 
 	use cpu_flags_x86_sse2 || append-cppflags "-DBUNDLE_NO_SSE"
 
+	# dev-cpp/pcg-cpp no longer ships a pkg-config file - use ours instead
+	PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${FILESDIR}"
+
 	# very weird directory layout
 	local emesonargs=(
 		--prefix="${INSTALL_PREFIX:?}"
