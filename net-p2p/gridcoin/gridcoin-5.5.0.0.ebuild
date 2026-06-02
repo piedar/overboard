@@ -145,7 +145,7 @@ src_install() {
 		newbin src/qt/gridcoinresearch gridcoinresearch
 		newman doc/gridcoinresearch.1 gridcoinresearch.1
 	fi
-	dodoc README.md CHANGELOG.md doc/build-unix.md
+	dodoc README.md CHANGELOG.md
 }
 
 pkg_postinst() {
