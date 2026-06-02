@@ -12,7 +12,8 @@ StateDirectoryMode=0710
 
 Type=simple
 Restart=on-failure
-TimeoutStopSec=600
+TimeoutStartSec=5min
+TimeoutStopSec=5min
 ExecStart=/usr/bin/gridcoinresearchd -daemon=0 -daemonwait=0 -printtoconsole=1 \
     -conf=/etc/conf.d/gridcoinresearch -datadir=${STATE_DIRECTORY}
 
