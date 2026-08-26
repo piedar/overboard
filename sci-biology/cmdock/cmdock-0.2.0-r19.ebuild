@@ -1,4 +1,4 @@
-# Copyright 2021-2025 Gentoo Authors
+# Copyright 2021-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # notes about optimization
@@ -43,7 +43,7 @@ SRC_URI="https://gitlab.com/Jukic/${PN}/-/archive/v${PV}/${PN}-v${PV}.tar.bz2"
 S="${WORKDIR}/${PN}-v${PV}"
 
 LICENSE="LGPL-3 ZLIB"
-SLOT="0/${PV}"
+SLOT="0"
 KEYWORDS="~amd64"
 # todo: make openmp optional
 IUSE="apidoc clang cpu_flags_x86_sse2 doc perfdata-sample-gen perfdata-sample-use pgo test"
@@ -52,17 +52,20 @@ REQUIRED_USE="
 "
 RESTRICT="perfdata-sample-gen? ( strip ) !test? ( test )"
 
+RDEPEND_ICU="dev-libs/icu:="
 RDEPEND="
+	${RDEPEND_ICU}
 	perfdata-sample-gen? (
 		app-alternatives/sh
 		=dev-util/perfdata-0.15*
 	)
 "
 DEPEND="
+	${RDEPEND_ICU}
 	dev-cpp/eigen:3
 	>=dev-cpp/indicators-2.3-r1
 	>=dev-cpp/pcg-cpp-0.98.1_p20210406-r1
-	=dev-libs/cxxopts-3.0*
+	>=dev-libs/cxxopts-3.1[icu]
 	perfdata-sample-use? (
 		boinc? ( sci-biology/cmdock[boinc?] )
 	)
@@ -99,17 +102,16 @@ BDEPEND="
 	test? ( ${PYTHON_DEPS} )
 "
 
-# todo: fix upstream
 PATCHES=(
-	"${FILESDIR}/${PN}-0.2.0-streampos-type.patch"
-	"${FILESDIR}/${PN}-0.2.0-remove-shadowed-variable.patch"
-	"${FILESDIR}/${PN}-0.2.0-fix-exit-gracefully-on-SIGTERM.patch"
+	"${FILESDIR}/${P}-cxxopts.patch"
+	"${FILESDIR}/${P}-streampos-type.patch"
+	"${FILESDIR}/${P}-remove-shadowed-variable.patch"
+	"${FILESDIR}/${P}-fix-exit-gracefully-on-SIGTERM.patch"
 )
 
 DOCS=( README.md changelog.md )
 
 BOINC_MASTER_URL="https://www.sidock.si/sidock/"
-BOINC_INVITATION_CODE="Crunch_4Science"
 BOINC_APP_HELPTEXT=\
 "The easiest way to do something useful with this application
 is to attach it to SiDock@home BOINC project."
@@ -198,16 +200,28 @@ src_configure() {
 
 	use cpu_flags_x86_sse2 || append-cppflags "-DBUNDLE_NO_SSE"
 
-	# dev-cpp/pcg-cpp no longer ships a pkg-config file - use ours instead
-	PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${FILESDIR}"
+	mkdir "${T}/pkg-config" || die
+	export PKG_CONFIG_PATH="${T}/pkg-config${PKG_CONFIG_PATH+:${PKG_CONFIG_PATH}}"
+	cat >> "${T}/pkg-config/pcg-cpp.pc" <<-EOF || die
+		Name: pcg-cpp
+		Version: 9999
+		Description:
+	EOF
+	cat >> "${T}/pkg-config/icu-cu.pc" <<-EOF || die
+		Name: icu-cu
+		Version: 9999
+		Description:
+		Requires: icu-uc
+	EOF
 
-	# very weird directory layout
+	# extremely weird directory layout
 	local emesonargs=(
 		--prefix="${INSTALL_PREFIX:?}"
 		$(meson_use apidoc)
 		$(meson_use doc)
 		$(meson_use test tests)
 		-Ddocdir="${EPREFIX}"/usr/share/doc/${PF}
+		-Dcpp_std=c++17
 	)
 	meson_src_configure
 }
@@ -250,7 +264,7 @@ src_install() {
 	if use boinc; then
 		boinc_install_appinfo "${FILESDIR}/app_info.xml"
 		boinc_install_wrapper cmdock_wrapper \
-			"${FILESDIR}/cmdock_job.xml" "cmdock_job.xml"
+			"${FILESDIR}/sidock_job.xml" "sidock_job.xml"
 
 		# install cmdock wrapper script
 		# this could instead be a copy of the binary like guru does it, or a symlink
@@ -262,7 +276,7 @@ src_install() {
 		exeopts --owner root --group boinc
 		newexe "${CMDOCK_EXE_WRAPPER}" cmdock
 
-		# install a blank file
+		# install an empty file
 		insinto "$(get_project_root)"
 		insopts -m 0644 --owner root --group boinc
 		newins - docking_out
